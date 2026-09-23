@@ -79,7 +79,7 @@ It scans the classpath with Java `ServiceLoader`, keeps discovered implementatio
 - Compatibility is checked through `@SupportedFor`.
 - Each compatible instance is processed by calling `provider.addTools(functionTool, tools)`, `provider.addPrompts(functionTool)`, and `provider.addResources(functionTool)`.
 
-When filters are supplied, each expression is matched with `Matcher.find()` against the callable tool's fully qualified registration name, `implementation-class-name:tool-name`. Use `null` to register every annotated callable tool.
+When filters are supplied, each expression is matched with `Matcher.find()` against the callable tool's fully qualified registration name, `implementation-class_name:tool-name`. Use `null` to register every annotated callable tool.
 
 #### Compatibility rules
 
@@ -126,7 +126,7 @@ Object apply(JsonNode params, Object... paramsByType) throws Exception
 #### Example
 
 ```java
-@Tool(name = "read-file", description = "Reads the content of a file.")
+@Tool(name = "read_file", description = "Reads the content of a file.")
 public String readFile(@Param(name = "path", description = "File path to read") String path) {
     // ...
 }
@@ -567,7 +567,7 @@ import org.machanism.machai.ai.tools.Tool;
 
 public class ExampleFunctionTools implements FunctionTools {
 
-    @Tool(name = "example-tool", description = "Processes an input value and returns a simple response.")
+    @Tool(name = "example_tool", description = "Processes an input value and returns a simple response.")
     public String exampleTool(
             @Param(name = "input", description = "Text value to process") String input,
             Configurator config) {

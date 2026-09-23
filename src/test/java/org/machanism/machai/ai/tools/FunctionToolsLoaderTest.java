@@ -26,7 +26,7 @@ class FunctionToolsLoaderTest {
         tools.add(supported);
         tools.add(unsupported);
         Genai provider = mock(Genai.class);
-        String[] requestedTools = { "read-file" };
+        String[] requestedTools = { "read_file" };
 
         // Act
         loader.applyTools(provider, requestedTools, ChildApplication.class);
