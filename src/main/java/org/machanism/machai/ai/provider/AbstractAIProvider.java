@@ -384,6 +384,8 @@ public abstract class AbstractAIProvider implements Genai {
 				String name;
 				if (Tool.NOT_DEFINED.equals(toolAnnotation.name())) {
 					name = method.getName();
+					name = toSnakeCase(name);
+					
 				} else {
 					name = toolAnnotation.name();
 				}
@@ -403,6 +405,39 @@ public abstract class AbstractAIProvider implements Genai {
 		}
 	}
 
+	/**
+	 * Converts a given string into snake_case format.
+	 * 
+	 * <p>
+	 * Examples:
+	 * <ul>
+	 * <li>{@code "myMethodName"} becomes {@code "my_method_name"}</li>
+	 * <li>{@code "Already-Kebab"} becomes {@code "already_kebab"}</li>
+	 * <li>{@code "getHTTPResponse"} becomes {@code "get_http_response"}</li>
+	 * <li>{@code null} or {@code ""} returns {@code ""}</li>
+	 * </ul>
+	 *
+	 * @param input the original string to convert
+	 * @return the snake_case representation, or an empty string if input is null or empty
+	 */
+	public static String toSnakeCase(String input) {
+		if (input == null || input.isEmpty()) {
+			return "";
+		}
+
+		// Replace hyphens or multiple spaces with a single underscore
+		String normalized = input.trim().replaceAll("[-_\\s]+", "_");
+
+		// Insert underscores between camelCase boundaries (e.g., lowercase to uppercase, or uppercase to lowercase sequence)
+		// 1. Insert underscore between a lowercase letter and an uppercase letter (e.g., "aB" -> "a_B")
+		// 2. Insert underscore between consecutive uppercase letters and a following lowercase letter (e.g., "HTMLParser" -> "HTML_Parser")
+		String snake = normalized
+				.replaceAll("([a-z0-9])([A-Z])", "$1_$2")
+				.replaceAll("([A-Z]+)([A-Z][a-z])", "$1_$2");
+
+		return snake.toLowerCase();
+	}
+	
 	/**
 	 * Interpolates system metadata variables (e.g., OS Name) inside the
 	 * annotation's tool description text before registering it with the LLM.
