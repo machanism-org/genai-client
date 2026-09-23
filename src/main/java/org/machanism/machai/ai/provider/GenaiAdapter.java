@@ -1,6 +1,7 @@
 package org.machanism.machai.ai.provider;
 
 import java.io.File;
+import java.util.List;
 
 import org.machanism.macha.core.commons.configurator.Configurator;
 import org.machanism.machai.ai.tools.FunctionTools;
@@ -138,6 +139,11 @@ public class GenaiAdapter implements Genai {
 	@Override
 	public void setErrorHandling(boolean errorHandling) {
 		provider.setErrorHandling(errorHandling);
+	}
+
+	@Override
+	public List<String> getToolNames() {
+		return provider.getToolNames();
 	}
 
 }

@@ -91,6 +91,7 @@ class AbstractAIProviderRegistrationTest {
         @Override protected void addPrompt(String n, String d, ToolFunction f, Role r, ParamDescriptor... p) { prompts.add(new PromptEntry(n, f, r)); }
         @Override protected void addResource(URI u, String d, String m, ToolFunction f, ParamDescriptor... p) { resources.add(new ResourceEntry(u, f)); }
         @Override public String perform() { return null; }
+        @Override public List<String> getToolNames() { return new ArrayList<>(); }
         String value(ObjectNode n, String key, String fallback) { return getParamValue(n, key, fallback); }
         Object safely(String name, ToolFunction function) { return safelyInvokeTool(name, function, new ObjectMapper().createObjectNode(), null); }
     }

@@ -17,6 +17,7 @@ class AbstractAIProviderTest {
         @Override protected void addTool(String n, String d, ToolFunction f, org.machanism.machai.ai.tools.ParamDescriptor... p) { }
         void initialize() { init("model", TestConfigurators.mapBacked()); }
         @Override public String perform() { return null; }
+        @Override public java.util.List<String> getToolNames() { return java.util.Collections.emptyList(); }
         Object invoke(String name, ToolFunction tool, com.fasterxml.jackson.databind.JsonNode node) { return safelyInvokeTool(name, tool, node, null); }
     }
 

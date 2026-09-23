@@ -1,6 +1,8 @@
 package org.machanism.machai.ai.provider.impl;
 
 import java.io.File;
+import java.util.Collections;
+import java.util.List;
 
 import org.apache.commons.lang3.Strings;
 import org.machanism.macha.core.commons.configurator.Configurator;
@@ -30,15 +32,17 @@ import org.slf4j.LoggerFactory;
  * When initialized with the {@code "log"} model, initialization, prompt,
  * instruction, tool, project-directory, error-handling, clear, and perform
  * calls log an INFO-level message so callers can verify that this no-op
- * provider is active. Prompt and resource registration remain silent. All
- * other model values leave diagnostic logging disabled.
+ * provider is active. Prompt and resource registration remain silent. All other
+ * model values leave diagnostic logging disabled.
  * </p>
  * 
  * @since 1.3.0
  */
 public class NoneProvider implements Genai {
 
-	/** Logger used when diagnostic logging is enabled with the {@code log} model. */
+	/**
+	 * Logger used when diagnostic logging is enabled with the {@code log} model.
+	 */
 	private static final Logger logger = LoggerFactory.getLogger(NoneProvider.class);
 
 	/** Whether provider calls should be logged at INFO level. */
@@ -126,7 +130,8 @@ public class NoneProvider implements Genai {
 	 */
 	@Override
 	public void addPrompts(FunctionTools tools) {
-		// SonarQube java:S1186: prompts are deliberately unsupported by this no-op provider.
+		// SonarQube java:S1186: prompts are deliberately unsupported by this no-op
+		// provider.
 	}
 
 	/**
@@ -136,7 +141,8 @@ public class NoneProvider implements Genai {
 	 */
 	@Override
 	public void addResources(FunctionTools tools) {
-		// SonarQube java:S1186: resources are deliberately unsupported by this no-op provider.
+		// SonarQube java:S1186: resources are deliberately unsupported by this no-op
+		// provider.
 	}
 
 	/**
@@ -161,6 +167,11 @@ public class NoneProvider implements Genai {
 		if (loggingOn) {
 			logger.info("errorHandling: {}", errorHandling);
 		}
+	}
+
+	@Override
+	public List<String> getToolNames() {
+		return Collections.emptyList();
 	}
 
 }

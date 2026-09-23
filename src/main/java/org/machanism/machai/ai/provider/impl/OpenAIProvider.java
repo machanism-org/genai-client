@@ -575,4 +575,10 @@ public class OpenAIProvider extends AbstractAIProvider implements EmbeddingProvi
 		return result;
 	}
 
+	@Override
+	public List<String> getToolNames() {
+		List<String> names = toolMap.keySet().stream().map(t -> t.asFunction().name()).collect(Collectors.toList());
+		return names;
+	}
+
 }

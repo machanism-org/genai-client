@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
@@ -367,5 +368,11 @@ public class AnthropicProvider extends AbstractAIProvider {
 		}
 		clientBuilder.maxRetries(3);
 		return clientBuilder.build();
+	}
+
+	@Override
+	public List<String> getToolNames() {
+		List<String> names = toolMap.keySet().stream().map(t -> t.build().name()).collect(Collectors.toList());
+		return names;
 	}
 }

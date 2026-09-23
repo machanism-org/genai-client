@@ -334,6 +334,11 @@ class GenaiProviderManagerTest {
         }
 
         @Override
+        public List<String> getToolNames() {
+            return Collections.emptyList();
+        }
+
+        @Override
         public void addPrompts(FunctionTools tools) {
         }
 

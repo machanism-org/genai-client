@@ -82,6 +82,11 @@ class ProviderClientAndBaseHooksTest {
             return null;
         }
 
+        @Override
+        public java.util.List<String> getToolNames() {
+            return java.util.Collections.emptyList();
+        }
+
         void callBaseHooks() {
             super.addMcpServer("name", "url", null, null);
             super.addWebSearch("type", null, null, null);

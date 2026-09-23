@@ -128,6 +128,7 @@ class CodeMieProviderDelegationTest {
             // SonarQube java:S1186: test double does not use instructions.
         }
         @Override public String perform() { return null; }
+        @Override public List<String> getToolNames() { return java.util.Collections.emptyList(); }
         @Override public void setProjectDir(java.io.File projectDir) {
             // SonarQube java:S1186: test double does not use project directories.
         }

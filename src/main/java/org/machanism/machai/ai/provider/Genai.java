@@ -1,10 +1,12 @@
 package org.machanism.machai.ai.provider;
 
 import java.io.File;
+import java.util.List;
 
 import org.machanism.macha.core.commons.configurator.Configurator;
 import org.machanism.machai.ai.tools.FunctionTools;
 import org.machanism.machai.ai.tools.Prompt;
+import org.machanism.machai.ai.tools.Resource;
 
 /**
  * Contract for a generative-AI provider integration.
@@ -44,12 +46,18 @@ public interface Genai {
 	 * Initializes the provider with application configuration.
 	 *
 	 * @param model the model identifier or name to use
-	 * @param conf  configuration source
+	 * @param conf  configuration source used to initialize the provider
+	 * @throws IllegalArgumentException if the model or configuration is invalid
 	 */
 	void init(String model, Configurator conf);
 
 	/**
 	 * Adds a user prompt to the current session.
+	 * <p>
+	 * Prompts are accumulated until {@link #perform()} or {@link #clear()} is
+	 * called. The exact message format sent to the provider is implementation
+	 * specific.
+	 * </p>
 	 *
 	 * @param text the prompt text
 	 */
@@ -65,22 +73,32 @@ public interface Genai {
 
 	/**
 	 * Sets system/session instructions for the current conversation.
+	 * <p>
+	 * Calling this method replaces any previously configured instructions. A
+	 * {@code null} value may be used to clear them when supported by the
+	 * implementation.
+	 * </p>
 	 *
 	 * @param instructions instruction text
 	 */
 	void instructions(String instructions);
 
 	/**
-	 * Executes the provider to produce a response based on the accumulated prompts
-	 * and state.
+	 * Executes the provider to produce a response based on the accumulated prompts,
+	 * instructions, files, and registered capabilities.
+	 * <p>
+	 * Whether the accumulated session is retained after execution is provider
+	 * specific. Call {@link #clear()} when a new independent conversation is
+	 * required.
+	 * </p>
 	 *
 	 * @return the provider response as a string
 	 */
 	String perform();
 
 	/**
-	 * Registers the tools exposed by the given {@link FunctionTools} implementation, optionally
-	 * restricting registration to a filtered subset of tools.
+	 * Registers the tools exposed by the given {@link FunctionTools} implementation,
+	 * optionally restricting registration to a filtered subset of tools.
 	 * <p>
 	 * Implementations are expected to discover tool definitions on the provided {@code tools}
 	 * instance (typically via annotated methods) and make them available for use, applying the
@@ -106,8 +124,25 @@ public interface Genai {
 	void addTools(FunctionTools tools, String[] enabledTools);
 
 	/**
+	 * Returns the names of tools currently registered with the provider.
+	 * <p>
+	 * The returned names may be used for diagnostics, filtering, request
+	 * construction, or tool-invocation processing. The ordering and mutability of
+	 * the returned list are provider-specific.
+	 * </p>
+	 *
+	 * @return the names of registered tools, or an empty list when no tools are
+	 *         registered
+	 */
+	List<String> getToolNames();
+	
+	/**
 	 * Scans the provided {@link FunctionTools} instance for methods annotated with
-	 * {@link Prompt}, and registers each prompt for use during a run.
+	 * {@link Prompt} and registers each prompt for use during a run.
+	 * <p>
+	 * The prompt name, description, role, and parameters are obtained from the
+	 * annotation and the method signature.
+	 * </p>
 	 *
 	 * @param tools the {@link FunctionTools} instance whose methods will be scanned
 	 *              for {@link Prompt} annotations
@@ -116,11 +151,10 @@ public interface Genai {
 
 	/**
 	 * Scans the provided {@link FunctionTools} instance for methods annotated with
-	 * {@code Resource}, and registers each resource for use during a run.
+	 * {@link Resource}, and registers each resource for use during a run.
 	 * <p>
-	 * This method inspects the given class instance to register executable resource
-	 * utilities that can be dynamically called by the AI model during generation
-	 * processes.
+	 * This method inspects the given class instance to register resource utilities
+	 * that can be dynamically called by the AI model during generation processes.
 	 * </p>
 	 *
 	 * @param tools the {@link FunctionTools} instance whose methods will be scanned
@@ -129,16 +163,18 @@ public interface Genai {
 	void addResources(FunctionTools tools);
 
 	/**
-	 * Sets the working directory for the provider, which may be used by tool
-	 * handlers.
+	 * Sets the working directory for the provider, which may be supplied to tool,
+	 * prompt, and resource handlers.
 	 *
-	 * @param projectDir the project directory
+	 * @param projectDir the project directory, or {@code null} to clear the current
+	 *         directory
 	 */
 	void setProjectDir(File projectDir);
 
 	/**
 	 * Configures whether tool invocation errors should be returned to the model for
-	 * conversational recovery or propagated as exceptions.
+	 * conversational recovery or propagated as exceptions. This setting does not
+	 * suppress provider or configuration errors unrelated to tool invocation.
 	 *
 	 * @param errorHandling {@code true} to return tool errors as response text;
 	 *                      {@code false} to propagate them immediately
