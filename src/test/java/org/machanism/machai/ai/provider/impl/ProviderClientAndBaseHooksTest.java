@@ -6,9 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
-import org.machanism.machai.ai.provider.AbstractAIProvider;
-import org.machanism.machai.ai.tools.ParamDescriptor;
-import org.machanism.machai.ai.tools.ToolFunction;
+import org.machanism.machai.process.provider.AbstractAIProvider;
+import org.machanism.machai.process.tools.ParamDescriptor;
+import org.machanism.machai.process.tools.ToolFunction;
 
 /** Exercises SDK client configuration without issuing requests and base optional hooks. */
 class ProviderClientAndBaseHooksTest {

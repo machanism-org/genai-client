@@ -17,10 +17,10 @@ import org.apache.commons.lang3.Strings;
 import org.machanism.macha.core.commons.configurator.Configurator;
 import org.machanism.macha.core.commons.configurator.LayeredConfigurator;
 import org.machanism.macha.core.commons.configurator.MutableConfigurator;
-import org.machanism.machai.ai.provider.AbstractAIProvider;
-import org.machanism.machai.ai.provider.EmbeddingProvider;
-import org.machanism.machai.ai.provider.Genai;
-import org.machanism.machai.ai.provider.GenaiAdapter;
+import org.machanism.machai.process.provider.AbstractAIProvider;
+import org.machanism.machai.process.provider.EmbeddingProvider;
+import org.machanism.machai.process.provider.ProcessProvider;
+import org.machanism.machai.process.provider.ProcessProviderAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +28,7 @@ import com.anthropic.client.AnthropicClient;
 import com.openai.client.OpenAIClient;
 
 /**
- * {@link Genai} implementation that integrates with EPAM CodeMie.
+ * {@link ProcessProvider} implementation that integrates with EPAM CodeMie.
  *
  * <p>
  * This provider authenticates against a CodeMie OpenID Connect (OIDC) token
@@ -62,8 +62,11 @@ import com.openai.client.OpenAIClient;
  * blank/unspecified models delegate to {@link OpenAIProvider}.</li>
  * <li>{@code claude-*} models delegate to {@link AnthropicProvider}</li>
  * </ul>
+ *
+ * @author Viktor Tovstyi
+ * @since 1.2.0
  */
-public class CodeMieProvider extends GenaiAdapter implements EmbeddingProvider {
+public class CodeMieProvider extends ProcessProviderAdapter implements EmbeddingProvider {
 
 	/**
 	 * Creates a CodeMie provider instance.

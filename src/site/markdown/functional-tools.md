@@ -11,7 +11,7 @@ Create or update the `Function Tolls` page:
 
 # Functional Tools
 
-Functional tools let the host application expose controlled capabilities to a `Genai` provider as callable tools, reusable prompts, and resource declarations. In this project, the feature covers three main integration styles:
+Functional tools let the host application expose controlled capabilities to a `ProcessProvider` (the provider abstraction used by this project) as callable tools, reusable prompts, and resource declarations. In this project, the feature covers three main integration styles:
 
 - Java-backed host tools, prompts, and resources declared through the functional-tools SPI,
 - OpenAI-native web search configured directly on `OpenAIProvider`,
@@ -35,13 +35,13 @@ Functional tools provide a structured way to:
 
 This separation improves maintainability and reuse. Tool logic stays in business-focused classes, while registration and execution are centralized in provider code. The same bundle can also declare URI-addressable resources with `@Resource`.
 
-## Package: `org.machanism.machai.ai.tools`
+## Package: `org.machanism.machai.process.tools`
 
-The package `org.machanism.machai.ai.tools` contains the host-side SPI, annotations, descriptors, and runtime contracts used to contribute functional tools.
+The package `org.machanism.machai.process.tools` contains the host-side SPI, annotations, descriptors, and runtime contracts used to contribute functional tools. The requested `src/main/java/org/machanism/machai/ai/tools` directory is not present in this source tree; the functional-tools implementation is under `src/main/java/org/machanism/machai/process/tools`.
 
 ### `FunctionTools`
 
-`FunctionTools` is the marker SPI for contributing host-managed tools, prompts, and resources to a `Genai` provider.
+`FunctionTools` is the marker SPI for contributing host-managed tools, prompts, and resources to a `ProcessProvider`.
 
 #### Purpose
 
@@ -69,17 +69,17 @@ Use `FunctionTools` to package a coherent capability set, such as:
 
 #### Purpose
 
-It scans the classpath with Java `ServiceLoader`, keeps discovered implementations, and registers each compatible implementation against the target `Genai` instance.
+It scans the classpath with Java `ServiceLoader`, keeps discovered implementations, and registers each compatible implementation against the target `ProcessProvider` instance.
 
 #### Main behavior
 
-- The constructor loads available `FunctionTools` implementations from the classpath using `ServiceLoader`.
+- The constructor loads available `FunctionTools` implementations from the classpath using `ServiceLoader`. It also accepts the legacy service-descriptor path `META-INF/services/org.machanism.machai.ai.tools.FunctionTools` for backward compatibility.
 - Discovered implementations are kept in an internal list in discovery order.
-- `applyTools(Genai provider, String[] tools, Class<?> appClass)` iterates over the discovered implementations. The `tools` argument is an optional array of regular-expression filters for callable tools; it does not filter prompts or resources.
+- `applyTools(ProcessProvider provider, String[] tools, Class<?> appClass)` iterates over the discovered implementations. The `tools` argument is an optional array of regular-expression filters for callable tools; it does not filter prompts or resources.
 - Compatibility is checked through `@SupportedFor`.
 - Each compatible instance is processed by calling `provider.addTools(functionTool, tools)`, `provider.addPrompts(functionTool)`, and `provider.addResources(functionTool)`.
 
-When filters are supplied, each expression is matched with `Matcher.find()` against the callable tool's fully qualified registration name, `implementation-class_name:tool-name`. Use `null` to register every annotated callable tool.
+When filters are supplied, each expression is compiled as a regular expression and matched with `Matcher.find()` against the callable tool's fully qualified registration name, `implementation-class-name:tool-name`. Use `null` to register every annotated callable tool.
 
 #### Compatibility rules
 
@@ -358,7 +358,7 @@ This means a custom tool method can combine model-supplied arguments with applic
 
 ## OpenAI-specific functional tools
 
-`OpenAIProvider` (`src/main/java/org/machanism/machai/ai/provider/impl/OpenAIProvider.java`) adds two provider-native tool types in addition to host-managed Java tools:
+`OpenAIProvider` (`src/main/java/org/machanism/machai/ai/provider/impl/OpenAIProvider.java`) adds two provider-native tool types in addition to host-managed Java tools. The provider stores all of these definitions in its internal tool map. Its current `getToolNames()` implementation assumes every map entry is a function tool, so callers should not use that method after registering web-search or MCP entries unless the provider implementation is updated to filter non-function tools first.
 
 - built-in OpenAI web search,
 - MCP server tools.
@@ -510,8 +510,10 @@ Host-managed Java-backed tools can be added either through the annotation-based 
 The preferred approach is to implement `FunctionTools`, annotate methods with `@Tool`, and let the provider register them.
 
 ```java
-provider.addTools(new MyFunctionTools());
-provider.addPrompts(new MyFunctionTools());
+MyFunctionTools tools = new MyFunctionTools();
+provider.addTools(tools, null);
+provider.addPrompts(tools);
+provider.addResources(tools);
 ```
 
 In practice, `FunctionToolsLoader` usually handles this automatically for discovered implementations.
@@ -526,7 +528,7 @@ For provider implementations or subclasses where annotation-based registration i
 addTool(String name, String description, ToolFunction function, ParamDescriptor... paramsDesc)
 ```
 
-In `OpenAIProvider`, `addTool(...)` converts `ParamDescriptor` entries into an object-style JSON schema and creates an OpenAI `FunctionTool`. Application code using only the `Genai` interface should normally use a `FunctionTools` implementation; it cannot call this protected hook directly.
+In `OpenAIProvider`, `addTool(...)` converts `ParamDescriptor` entries into an object-style JSON schema and creates an OpenAI `FunctionTool`. Application code using only the `ProcessProvider` interface should normally use a `FunctionTools` implementation; it cannot call this protected hook directly.
 
 The generated parameter schema includes:
 
@@ -561,9 +563,9 @@ To create a custom functional tool, implement `FunctionTools`, annotate your met
 package com.example.tools;
 
 import org.machanism.macha.core.commons.configurator.Configurator;
-import org.machanism.machai.ai.tools.FunctionTools;
-import org.machanism.machai.ai.tools.Param;
-import org.machanism.machai.ai.tools.Tool;
+import org.machanism.machai.process.tools.FunctionTools;
+import org.machanism.machai.process.tools.Param;
+import org.machanism.machai.process.tools.Tool;
 
 public class ExampleFunctionTools implements FunctionTools {
 
@@ -581,7 +583,7 @@ public class ExampleFunctionTools implements FunctionTools {
 
 Create this file:
 
-`src/main/resources/META-INF/services/org.machanism.machai.ai.tools.FunctionTools`
+`src/main/resources/META-INF/services/org.machanism.machai.process.tools.FunctionTools`
 
 Add the fully qualified class name:
 
@@ -594,7 +596,7 @@ If the file contains multiple class names, all of them can be discovered and app
 ### Step 3: Apply tools during provider setup
 
 ```java
-Genai provider = ...;
+ProcessProvider provider = ...;
 Class<?> appClass = MyProcessor.class;
 
 FunctionToolsLoader loader = new FunctionToolsLoader();

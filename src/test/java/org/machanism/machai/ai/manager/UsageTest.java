@@ -3,6 +3,7 @@ package org.machanism.machai.ai.manager;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
+import org.machanism.machai.process.manager.Usage;
 
 class UsageTest {
 

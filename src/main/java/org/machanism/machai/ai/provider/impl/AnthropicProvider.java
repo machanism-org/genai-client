@@ -13,12 +13,12 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
-import org.machanism.machai.ai.manager.Usage;
-import org.machanism.machai.ai.manager.UsageStatistics;
-import org.machanism.machai.ai.provider.AbstractAIProvider;
-import org.machanism.machai.ai.provider.Genai;
-import org.machanism.machai.ai.tools.ParamDescriptor;
-import org.machanism.machai.ai.tools.ToolFunction;
+import org.machanism.machai.process.manager.Usage;
+import org.machanism.machai.process.manager.UsageStatistics;
+import org.machanism.machai.process.provider.AbstractAIProvider;
+import org.machanism.machai.process.provider.ProcessProvider;
+import org.machanism.machai.process.tools.ParamDescriptor;
+import org.machanism.machai.process.tools.ToolFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +49,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * Anthropic-backed implementation of Machai's {@link Genai} abstraction.
+ * Anthropic-backed implementation of Machai's {@link ProcessProvider} abstraction.
  *
  * <p>
  * This provider adapts the Anthropic Java SDK to the Machai provider interface.
@@ -370,6 +370,11 @@ public class AnthropicProvider extends AbstractAIProvider {
 		return clientBuilder.build();
 	}
 
+	/**
+	 * Returns the names of locally registered Anthropic tools.
+	 *
+	 * @return a list of registered tool names in registration order
+	 */
 	@Override
 	public List<String> getToolNames() {
 		List<String> names = toolMap.keySet().stream().map(t -> t.build().name()).collect(Collectors.toList());

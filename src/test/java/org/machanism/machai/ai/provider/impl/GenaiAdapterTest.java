@@ -12,17 +12,17 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 
 import org.junit.jupiter.api.Test;
-import org.machanism.machai.ai.provider.Genai;
-import org.machanism.machai.ai.provider.GenaiAdapter;
+import org.machanism.machai.process.provider.ProcessProvider;
+import org.machanism.machai.process.provider.ProcessProviderAdapter;
 
 /** Verifies every adapter operation is delegated to its provider. */
 class GenaiAdapterTest {
     @Test
     void allOperationsDelegateAndNullProviderIsRejected() {
         // Arrange
-        Genai delegate = mock(Genai.class);
+        ProcessProvider delegate = mock(ProcessProvider.class);
         when(delegate.perform()).thenReturn("answer");
-        GenaiAdapter adapter = new GenaiAdapter();
+        ProcessProviderAdapter adapter = new ProcessProviderAdapter();
         File directory = new File(".");
 
         // Act

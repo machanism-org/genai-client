@@ -13,6 +13,8 @@ import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.machanism.machai.process.manager.Usage;
+import org.machanism.machai.process.manager.UsageStatistics;
 
 class UsageStatisticsTest {
 
@@ -90,6 +92,20 @@ class UsageStatisticsTest {
         assertEquals(2, retrievedUsages.size());
         assertEquals(firstUsage, retrievedUsages.get(0));
         assertEquals(secondUsage, retrievedUsages.get(1));
+    }
+
+    @Test
+    void addUsageSupportsNullModelIdentifiersBecauseTheRegistryUsesMapKeys() {
+        // Arrange
+        Usage usage = new Usage(1, 2, 3);
+
+        // Act
+        UsageStatistics.addUsage(null, usage);
+
+        // Assert
+        assertEquals(usage, UsageStatistics.getUsageForModel(null).get(0));
+        assertEquals(1, UsageStatistics.getAllModelUsages().size());
+        assertTrue(UsageStatistics.getAllModelUsages().containsKey(null));
     }
 
     @Test

@@ -13,7 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.Test;
-import org.machanism.machai.ai.tools.ToolFunction;
+import org.machanism.machai.process.tools.ToolFunction;
 
 import com.anthropic.models.beta.messages.BetaToolUseBlock;
 import com.anthropic.models.beta.messages.BetaToolUseBlockParam;
@@ -67,10 +67,10 @@ class CodeMieProviderExtensionAndAnthropicToolTest {
         AnthropicProvider provider = new AnthropicProvider();
         provider.init("claude-test", TestConfigurators.mapBacked());
         Method addTool = AnthropicProvider.class.getDeclaredMethod("addTool", String.class, String.class,
-                ToolFunction.class, org.machanism.machai.ai.tools.ParamDescriptor[].class);
+                ToolFunction.class, org.machanism.machai.process.tools.ParamDescriptor[].class);
         addTool.setAccessible(true);
         addTool.invoke(provider, "Lookup_Value", "description", (ToolFunction) (params, context) -> "handled",
-                new org.machanism.machai.ai.tools.ParamDescriptor[0]);
+                new org.machanism.machai.process.tools.ParamDescriptor[0]);
         BetaToolUseBlock toolUse = mock(BetaToolUseBlock.class);
         BetaToolUseBlockParam parameter = mock(BetaToolUseBlockParam.class);
         when(toolUse.name()).thenReturn("lookup_value");
@@ -93,7 +93,7 @@ class CodeMieProviderExtensionAndAnthropicToolTest {
         return constructor.newInstance(new CodeMieProvider(), username, url, password);
     }
 
-    private static void initialize(org.machanism.machai.ai.provider.Genai provider, String model) {
+    private static void initialize(org.machanism.machai.process.provider.ProcessProvider provider, String model) {
         org.machanism.macha.core.commons.configurator.MutableConfigurator config = org.mockito.Mockito.mock(
                 org.machanism.macha.core.commons.configurator.MutableConfigurator.class);
         when(config.get(OpenAIProvider.OPENAI_API_KEY)).thenReturn("initial-key");

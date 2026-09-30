@@ -16,6 +16,17 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 
 import org.junit.jupiter.api.Test;
+import org.machanism.machai.process.tools.ErrorResultException;
+import org.machanism.machai.process.tools.FunctionTools;
+import org.machanism.machai.process.tools.Param;
+import org.machanism.machai.process.tools.ParamDescriptor;
+import org.machanism.machai.process.tools.Prompt;
+import org.machanism.machai.process.tools.Resource;
+import org.machanism.machai.process.tools.Role;
+import org.machanism.machai.process.tools.SpecialException;
+import org.machanism.machai.process.tools.SupportedFor;
+import org.machanism.machai.process.tools.Tool;
+import org.machanism.machai.process.tools.ToolFunction;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

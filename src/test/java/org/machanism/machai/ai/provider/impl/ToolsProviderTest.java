@@ -12,10 +12,11 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.machanism.macha.core.commons.configurator.Configurator;
-import org.machanism.machai.ai.provider.AbstractAIProvider;
-import org.machanism.machai.ai.tools.FunctionTools;
-import org.machanism.machai.ai.tools.Param;
-import org.machanism.machai.ai.tools.Tool;
+import org.machanism.machai.process.provider.AbstractAIProvider;
+import org.machanism.machai.process.provider.impl.ToolsProvider;
+import org.machanism.machai.process.tools.FunctionTools;
+import org.machanism.machai.process.tools.Param;
+import org.machanism.machai.process.tools.Tool;
 
 /** Tests the local YAML tool execution path without contacting an AI service. */
 class ToolsProviderTest {

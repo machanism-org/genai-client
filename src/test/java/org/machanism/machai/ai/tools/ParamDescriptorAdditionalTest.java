@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
+import org.machanism.machai.process.tools.Param;
+import org.machanism.machai.process.tools.ParamDescriptor;
 
 class ParamDescriptorAdditionalTest {
     @Test

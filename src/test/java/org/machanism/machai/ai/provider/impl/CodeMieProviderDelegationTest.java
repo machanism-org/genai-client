@@ -13,8 +13,8 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.machanism.macha.core.commons.configurator.Configurator;
-import org.machanism.machai.ai.provider.EmbeddingProvider;
-import org.machanism.machai.ai.provider.Genai;
+import org.machanism.machai.process.provider.EmbeddingProvider;
+import org.machanism.machai.process.provider.ProcessProvider;
 
 /** Tests CodeMie model routing without making a remote authentication request. */
 class CodeMieProviderDelegationTest {
@@ -82,17 +82,17 @@ class CodeMieProviderDelegationTest {
         return config;
     }
 
-    private static Genai delegate(CodeMieProvider provider) {
+    private static ProcessProvider delegate(CodeMieProvider provider) {
         try {
-            Field field = org.machanism.machai.ai.provider.GenaiAdapter.class.getDeclaredField("provider");
+            Field field = org.machanism.machai.process.provider.ProcessProviderAdapter.class.getDeclaredField("provider");
             field.setAccessible(true);
-            return (Genai) field.get(provider);
+            return (ProcessProvider) field.get(provider);
         } catch (ReflectiveOperationException e) {
             throw new AssertionError(e);
         }
     }
 
-    private static void setDelegate(CodeMieProvider provider, Genai delegate) {
+    private static void setDelegate(CodeMieProvider provider, ProcessProvider delegate) {
         provider.setProvider(delegate);
     }
 
@@ -114,7 +114,7 @@ class CodeMieProviderDelegationTest {
         }
     }
 
-    private static class NonEmbeddingGenai implements Genai {
+    private static class NonEmbeddingGenai implements ProcessProvider {
         @Override public void init(String model, org.machanism.macha.core.commons.configurator.Configurator conf) {
             // SonarQube java:S1186: test double intentionally has no initialization behavior.
         }
@@ -132,13 +132,13 @@ class CodeMieProviderDelegationTest {
         @Override public void setProjectDir(java.io.File projectDir) {
             // SonarQube java:S1186: test double does not use project directories.
         }
-        @Override public void addTools(org.machanism.machai.ai.tools.FunctionTools tools, String[] enabledTools) {
+        @Override public void addTools(org.machanism.machai.process.tools.FunctionTools tools, String[] enabledTools) {
             // SonarQube java:S1186: test double does not register tools.
         }
-        @Override public void addPrompts(org.machanism.machai.ai.tools.FunctionTools tools) {
+        @Override public void addPrompts(org.machanism.machai.process.tools.FunctionTools tools) {
             // SonarQube java:S1186: test double does not register prompts.
         }
-        @Override public void addResources(org.machanism.machai.ai.tools.FunctionTools tools) {
+        @Override public void addResources(org.machanism.machai.process.tools.FunctionTools tools) {
             // SonarQube java:S1186: test double does not register resources.
         }
         @Override public void setErrorHandling(boolean errorHandling) {

@@ -8,7 +8,7 @@ import java.lang.reflect.Method;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
-import org.machanism.machai.ai.tools.ParamDescriptor;
+import org.machanism.machai.process.tools.ParamDescriptor;
 
 import com.anthropic.models.beta.messages.BetaMessageParam;
 import com.anthropic.models.beta.messages.MessageCreateParams;

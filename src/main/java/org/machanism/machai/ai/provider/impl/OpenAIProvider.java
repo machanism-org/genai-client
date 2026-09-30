@@ -15,13 +15,13 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.machanism.macha.core.commons.configurator.Configurator;
-import org.machanism.machai.ai.manager.Usage;
-import org.machanism.machai.ai.manager.UsageStatistics;
-import org.machanism.machai.ai.provider.AbstractAIProvider;
-import org.machanism.machai.ai.provider.EmbeddingProvider;
-import org.machanism.machai.ai.provider.Genai;
-import org.machanism.machai.ai.tools.ParamDescriptor;
-import org.machanism.machai.ai.tools.ToolFunction;
+import org.machanism.machai.process.manager.Usage;
+import org.machanism.machai.process.manager.UsageStatistics;
+import org.machanism.machai.process.provider.AbstractAIProvider;
+import org.machanism.machai.process.provider.EmbeddingProvider;
+import org.machanism.machai.process.provider.ProcessProvider;
+import org.machanism.machai.process.tools.ParamDescriptor;
+import org.machanism.machai.process.tools.ToolFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,7 +60,7 @@ import com.openai.models.responses.WebSearchTool.UserLocation;
 import com.openai.services.blocking.ModelService;
 
 /**
- * OpenAI-backed {@link Genai} implementation.
+ * OpenAI-backed {@link ProcessProvider} implementation.
  *
  * <p>
  * This provider adapts the Machai provider abstraction to the OpenAI
@@ -575,6 +575,11 @@ public class OpenAIProvider extends AbstractAIProvider implements EmbeddingProvi
 		return result;
 	}
 
+	/**
+	 * Returns the names of function tools registered with this provider.
+	 *
+	 * @return a list of registered function-tool names
+	 */
 	@Override
 	public List<String> getToolNames() {
 		List<String> names = toolMap.keySet().stream().map(t -> t.asFunction().name()).collect(Collectors.toList());

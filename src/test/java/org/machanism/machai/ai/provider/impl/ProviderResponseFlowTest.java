@@ -107,7 +107,7 @@ class ProviderResponseFlowTest {
 			return client;
 		}
 
-		void register(String name, org.machanism.machai.ai.tools.ToolFunction function) {
+		void register(String name, org.machanism.machai.process.tools.ToolFunction function) {
 			addTool(name, "test tool", function);
 		}
 	}

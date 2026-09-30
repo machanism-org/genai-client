@@ -14,15 +14,16 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.machanism.macha.core.commons.configurator.Configurator;
-import org.machanism.machai.ai.tools.FunctionTools;
-import org.machanism.machai.ai.tools.Param;
-import org.machanism.machai.ai.tools.ParamDescriptor;
-import org.machanism.machai.ai.tools.Prompt;
-import org.machanism.machai.ai.tools.Resource;
-import org.machanism.machai.ai.tools.Role;
-import org.machanism.machai.ai.tools.SpecialException;
-import org.machanism.machai.ai.tools.Tool;
-import org.machanism.machai.ai.tools.ToolFunction;
+import org.machanism.machai.process.provider.AbstractAIProvider;
+import org.machanism.machai.process.tools.FunctionTools;
+import org.machanism.machai.process.tools.Param;
+import org.machanism.machai.process.tools.ParamDescriptor;
+import org.machanism.machai.process.tools.Prompt;
+import org.machanism.machai.process.tools.Resource;
+import org.machanism.machai.process.tools.Role;
+import org.machanism.machai.process.tools.SpecialException;
+import org.machanism.machai.process.tools.Tool;
+import org.machanism.machai.process.tools.ToolFunction;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;

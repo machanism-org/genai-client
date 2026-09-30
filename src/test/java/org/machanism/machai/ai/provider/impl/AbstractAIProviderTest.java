@@ -4,9 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
-import org.machanism.machai.ai.provider.AbstractAIProvider;
-import org.machanism.machai.ai.tools.SpecialException;
-import org.machanism.machai.ai.tools.ToolFunction;
+import org.machanism.machai.process.provider.AbstractAIProvider;
+import org.machanism.machai.process.tools.SpecialException;
+import org.machanism.machai.process.tools.ToolFunction;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -14,7 +14,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 /** Tests common provider state and protected tool error semantics. */
 class AbstractAIProviderTest {
     private static final class ExposedProvider extends AbstractAIProvider {
-        @Override protected void addTool(String n, String d, ToolFunction f, org.machanism.machai.ai.tools.ParamDescriptor... p) { }
+        @Override protected void addTool(String n, String d, ToolFunction f, org.machanism.machai.process.tools.ParamDescriptor... p) { }
         void initialize() { init("model", TestConfigurators.mapBacked()); }
         @Override public String perform() { return null; }
         @Override public java.util.List<String> getToolNames() { return java.util.Collections.emptyList(); }

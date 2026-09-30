@@ -8,8 +8,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.lang.reflect.Field;
 
 import org.junit.jupiter.api.Test;
-import org.machanism.machai.ai.provider.AbstractAIProvider;
-import org.machanism.machai.ai.tools.ParamDescriptor;
+import org.machanism.machai.process.provider.AbstractAIProvider;
+import org.machanism.machai.process.tools.ParamDescriptor;
 
 import com.openai.models.responses.Tool;
 

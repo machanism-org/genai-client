@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import org.machanism.machai.process.provider.TypeConverter;
 
 class TypeConverterTest {
     static class Parameters {
@@ -47,7 +48,7 @@ class TypeConverterTest {
     void convertToType_handlesNullSentinelsAndSimpleValues() throws Exception {
         assertEquals("hello", TypeConverter.convertToType(parameter(0), "hello"));
         assertEquals(null, TypeConverter.convertToType(parameter(0), null));
-        assertEquals(null, TypeConverter.convertToType(parameter(0), org.machanism.machai.ai.tools.Param.NULL));
+        assertEquals(null, TypeConverter.convertToType(parameter(0), org.machanism.machai.process.tools.Param.NULL));
         assertEquals(42, TypeConverter.convertToType(parameter(1), "42"));
         assertEquals(true, TypeConverter.convertToType(parameter(2), "true"));
     }

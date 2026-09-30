@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
 import org.junit.jupiter.api.Test;
+import org.machanism.machai.process.tools.ToolExecutionException;
 
 class ToolExecutionExceptionTest {
 

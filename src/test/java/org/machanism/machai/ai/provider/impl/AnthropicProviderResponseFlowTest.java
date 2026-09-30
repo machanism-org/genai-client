@@ -13,8 +13,8 @@ import java.util.Collections;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
-import org.machanism.machai.ai.manager.UsageStatistics;
-import org.machanism.machai.ai.tools.ParamDescriptor;
+import org.machanism.machai.process.manager.UsageStatistics;
+import org.machanism.machai.process.tools.ParamDescriptor;
 
 import com.anthropic.client.AnthropicClient;
 import com.anthropic.models.beta.messages.BetaContentBlock;

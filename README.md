@@ -4,6 +4,20 @@
 
 [![Maven Central](https://img.shields.io/maven-central/v/org.machanism.machai/genai-client.svg)](https://central.sonatype.com/artifact/org.machanism.machai/genai-client) [![bindex](https://img.shields.io/badge/bindex-blue.svg)](https://raw.githubusercontent.com/machanism-org/genai-client/refs/heads/main/bindex.json)
 
+## Cloning and Getting Started
+
+To clone and set up this project locally, follow these steps:
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/machanism-org/genai-client.git
+   cd genai-client
+   ```
+2. **Build the project using Maven:**
+   ```bash
+   mvn clean install
+   ```
+
 GenAI Client is a Java library for integrating Machai applications with generative AI providers through a consistent provider abstraction. It provides provider resolution, prompt and instruction handling, runtime configuration, optional embedding generation, token-usage tracking, and registration of Java tools, prompts, and resources for AI-powered workflows.
 
 ## Project Structure
