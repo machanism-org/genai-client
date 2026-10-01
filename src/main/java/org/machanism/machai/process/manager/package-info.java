@@ -1,47 +1,49 @@
 /* @guidance: >>> ${guidances}/package-info-javadoc.md */
 
 /**
- * Coordinates runtime provider construction and records token usage for the
- * application's generative-AI process integrations.
+ * Coordinates provider creation and in-memory token-usage reporting for
+ * generative-AI integrations.
  *
- * <p>This package is the management layer between provider implementations and
- * callers that need either an initialized process provider or usage reporting.
- * {@link ProcessProviderManager} uses reflection and a
- * {@link org.machanism.macha.core.commons.configurator.Configurator} to create
- * providers. {@link Usage} represents the metrics returned for one interaction,
- * and {@link UsageStatistics} groups those records in an in-memory registry by
- * the model identifier supplied by the caller.</p>
+ * <p>This package is the management boundary between application configuration,
+ * provider implementations, and callers that need an initialized
+ * {@link org.machanism.machai.process.provider.ProcessProvider} or
+ * {@link org.machanism.machai.process.provider.EmbeddingProvider}. The
+ * {@link ProcessProviderManager} is a reflection-based factory. It parses a
+ * provider/model expression, resolves the provider class, creates it through a
+ * public no-argument constructor, and invokes its initialization method with a
+ * {@link org.machanism.macha.core.commons.configurator.Configurator}.</p>
  *
- * <h2>Provider construction</h2>
- * <p>Call
+ * <h2>Provider resolution</h2>
+ * <p>Use
  * {@link ProcessProviderManager#getProvider(String, org.machanism.macha.core.commons.configurator.Configurator)}
- * or
+ * for process providers and
  * {@link ProcessProviderManager#getEmbeddingProvider(String, org.machanism.macha.core.commons.configurator.Configurator)}
- * with an identifier in the form {@code Provider:Model}. The model portion is
- * passed unchanged to the provider's initialization method. A blank provider
- * portion returns {@code null}; otherwise, a provider must be constructible
- * through a public no-argument constructor.</p>
+ * for embedding providers. Both methods accept a {@code Provider:Model}
+ * expression and pass the text after the first colon to the provider. A blank
+ * provider segment returns {@code null}. Process-provider names must be valid
+ * Java identifiers and are resolved through the supported conventional provider
+ * packages, with a nested-provider fallback when no conventional class is
+ * available.</p>
  *
- * <p>Chat providers use a Java-identifier provider name and are resolved against
- * the package conventions supported by {@code ProcessProviderManager}. The
- * manager checks its configured conventional implementation names and then its
- * nested-provider fallback. Embedding providers use the same conventions, but a
- * provider portion containing a dot is also accepted as a fully qualified class
- * name. The resolved embedding class must implement
- * {@link org.machanism.machai.process.provider.EmbeddingProvider}. Invalid names,
- * missing classes, incompatible embedding classes, and construction or
- * initialization failures are reported as {@link IllegalArgumentException}.</p>
+ * <p>Embedding providers use the same conventional resolution rules, except that
+ * a provider segment containing a dot is treated as a fully qualified class name.
+ * The resolved class must implement
+ * {@link org.machanism.machai.process.provider.EmbeddingProvider}. A provider
+ * must expose a public no-argument constructor. Invalid names, missing classes,
+ * incompatible embedding classes, and most reflective failures are reported as
+ * {@link IllegalArgumentException}; a runtime exception thrown by an embedding
+ * provider during initialization is propagated unchanged.</p>
  *
- * <h2>Usage collection</h2>
- * <p>{@link UsageStatistics} is a process-local static registry; it does not
- * persist records between application runs. Records are grouped under the exact
- * model identifier passed to
- * {@link UsageStatistics#addUsage(String, Usage)}. Each {@link Usage} instance
- * is immutable after construction. The single-model accessor returns a defensive
- * list copy, whereas the all-model accessor returns a shallow map copy whose
- * value lists are shared with the registry. Callers should therefore treat the
- * lists returned by the latter accessor as read-only, particularly while usage
- * is being logged.</p>
+ * <h2>Usage registry</h2>
+ * <p>{@link Usage} records input, cached-input, and output token counts for one
+ * interaction. {@link UsageStatistics} keeps those records in a process-local
+ * static map keyed by the exact model identifier supplied to
+ * {@link UsageStatistics#addUsage(String, Usage)}. The registry is not persisted
+ * between application runs. Adding records and the model-specific accessors
+ * synchronize on the registry, while logging reports summaries through the
+ * package's SLF4J logger. The single-model accessor returns a defensive list
+ * copy. {@link UsageStatistics#getAllModelUsages()} returns a shallow map copy,
+ * so its value lists remain shared and should be treated as read-only.</p>
  *
  * <h2>Example</h2>
  * <pre>
@@ -54,10 +56,9 @@
  * UsageStatistics.logUsage();
  * </pre>
  *
- * <p>The explicit {@link UsageStatistics#init()} call is optional and can be
- * used to force utility-class initialization during application startup.
- * {@link UsageStatistics#logUsage()} reports totals for the models currently
- * registered, while
+ * <p>{@link UsageStatistics#init()} can be called during startup to force utility
+ * class initialization. {@link UsageStatistics#logUsage()} reports each model
+ * currently visible to the registry, and
  * {@link UsageStatistics#logUsageForModel(String)} reports one model.</p>
  *
  * @see org.machanism.machai.process.provider.ProcessProvider

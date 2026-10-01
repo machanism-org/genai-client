@@ -1,57 +1,78 @@
 /* @guidance: >>> ${guidances}/package-info-javadoc.md */
 
 /**
- * Concrete and host-side provider implementations for the Machai process API.
+ * Concrete {@link org.machanism.machai.process.provider.ProcessProvider}
+ * implementations for disabling processing or dispatching host-defined tools.
  *
  * <p>
- * This package contains provider implementations that can be selected by an
- * application when it needs either a no-op processing mode or deterministic
- * invocation of functions implemented by the host application. The classes
- * implement {@link org.machanism.machai.process.provider.ProcessProvider}, while
- * {@link ToolsProvider} additionally inherits common tool-discovery and
- * invocation behavior from
- * {@link org.machanism.machai.process.provider.AbstractAIProvider}.
+ * This package contains providers for applications that need the common process
+ * provider contract but do not necessarily need a remote AI service. A caller
+ * can select {@link NoneProvider} for an intentional no-op implementation, or
+ * {@link ToolsProvider} to execute registered Java functions from a structured
+ * YAML request. Both providers expose the same lifecycle operations for
+ * initialization, prompt submission, tool registration, execution, and state
+ * management; their execution behavior is intentionally different.
  * </p>
  *
- * <h2>Implementations</h2>
+ * <h2>Provider implementations</h2>
  * <ul>
  * <li>
- * {@link NoneProvider} is a deliberately inactive provider. It accepts the
- * common lifecycle calls, discards their input, returns an empty tool-name list,
- * and always returns {@code null} from {@link NoneProvider#perform()}. Selecting
- * the {@code log} model enables informational lifecycle logging, which is useful
- * for disabled-provider defaults and tests.
+ * <p>
+ * {@link NoneProvider} accepts lifecycle input and discards it. It retains no
+ * prompts, instructions, tools, resources, project-directory information, or
+ * error-handling configuration. Its {@link NoneProvider#perform()} method
+ * always returns {@code null}, and {@link NoneProvider#getToolNames()} returns
+ * an immutable empty list. Initializing it with the model {@code "log"}
+ * enables INFO-level diagnostic messages for supported lifecycle calls; any
+ * other model disables those messages.
+ * </p>
  * </li>
  * <li>
- * {@link ToolsProvider} is a deterministic function-tool provider. It registers
- * annotated functions through the inherited
- * {@link org.machanism.machai.process.provider.AbstractAIProvider#addTools(
- * org.machanism.machai.process.tools.FunctionTools, String[])} mechanism and,
- * when initialized with the {@code yaml} model, interprets its last prompt as a
- * YAML object containing a {@code tool} name and optional {@code params} object.
- * It invokes the selected function and serializes non-string results as JSON.
+ * <p>
+ * {@link ToolsProvider} extends
+ * {@link org.machanism.machai.process.provider.AbstractAIProvider}. It stores
+ * submitted prompts and maintains registered tool functions in registration
+ * order. When initialized with the model {@code "yaml"},
+ * {@link ToolsProvider#perform()} parses the most recently submitted prompt as
+ * a YAML mapping, obtains its required {@code tool} value and optional
+ * {@code params} value, invokes the matching function, and returns a string
+ * result. Non-string results are serialized as JSON. A missing tool name causes
+ * an {@link IllegalArgumentException}; tool failures are propagated by default,
+ * while the inherited error-handling setting can convert a failure message into
+ * the returned result. A YAML-mode call must have at least one prompt.
+ * </p>
  * </li>
  * </ul>
  *
- * <h2>Relationships and lifecycle</h2>
+ * <h2>Architecture and lifecycle</h2>
  * <p>
- * {@code NoneProvider} implements the contract directly because it has no
- * request state or backend. {@code ToolsProvider} uses the abstract provider
- * infrastructure for reflective discovery of methods annotated with
- * {@link org.machanism.machai.process.tools.Tool}, prompt and resource
- * registration hooks, project-directory context, and configurable tool-error
- * handling. Tool registration is performed through
+ * {@code NoneProvider} implements the provider interface directly because it
+ * has no backend or request state. {@code ToolsProvider} specializes the
+ * abstract provider's reflective tool-registration and invocation facilities.
+ * Host functions are normally exposed by methods annotated with
+ * {@link org.machanism.machai.process.tools.Tool}; callers register their
+ * containing {@link org.machanism.machai.process.tools.FunctionTools} through
  * {@link org.machanism.machai.process.provider.ProcessProvider#addTools(
- * org.machanism.machai.process.tools.FunctionTools, String[])}, and the
- * resulting names are available from
- * {@link org.machanism.machai.process.provider.ProcessProvider#getToolNames()}.
+ * org.machanism.machai.process.tools.FunctionTools, String[])}. The abstract
+ * provider also supplies project-directory context, prompt and resource hooks,
+ * and configurable handling for exceptions raised while invoking tools.
+ * </p>
+ *
+ * <p>
+ * Provider instances can retain request-specific data. For an independent
+ * request, register the required tools and prompts, then call
+ * {@link org.machanism.machai.process.provider.ProcessProvider#perform()}.
+ * Call {@link org.machanism.machai.process.provider.ProcessProvider#clear()}
+ * before starting the next request when the selected implementation supports
+ * clearing its state. Configure error handling according to whether invocation
+ * failures should be returned as text or propagated to the caller.
  * </p>
  *
  * <h2>Usage</h2>
  * <p>
- * A deterministic tool invocation can be performed as follows. The configured
- * tool object must expose a method annotated with {@code @Tool}; the prompt is
- * YAML whose {@code tool} value matches the registered tool name.
+ * The following example registers annotated host functions and asks
+ * {@code ToolsProvider} to dispatch the final prompt. The YAML {@code tool}
+ * value must match a registered function name.
  * </p>
  * <pre>
  * ToolsProvider provider = new ToolsProvider();
@@ -63,7 +84,7 @@
  * </pre>
  *
  * <p>
- * Use {@code NoneProvider} when processing should be intentionally disabled:
+ * Use {@code NoneProvider} when processing must be deliberately disabled:
  * </p>
  * <pre>
  * ProcessProvider provider = new NoneProvider();
@@ -72,14 +93,10 @@
  * String result = provider.perform(); // always null
  * </pre>
  *
- * <p>
- * Concrete providers retain only the state defined by their implementation.
- * Call {@link org.machanism.machai.process.provider.ProcessProvider#clear()}
- * before starting an independent request, and configure error handling according
- * to whether tool failures should be returned to the caller or propagated.
- * </p>
- *
- * @author Viktor Tovstyi
+ * @see org.machanism.machai.process.provider.ProcessProvider
+ * @see org.machanism.machai.process.provider.AbstractAIProvider
+ * @see NoneProvider
+ * @see ToolsProvider
  * @since 1.2.0
  */
 package org.machanism.machai.process.provider.impl;

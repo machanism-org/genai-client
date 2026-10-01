@@ -49,7 +49,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * Anthropic-backed implementation of Machai's {@link ProcessProvider} abstraction.
+ * Anthropic-backed implementation of Machai's {@link ProcessProvider}
+ * abstraction.
  *
  * <p>
  * This provider adapts the Anthropic Java SDK to the Machai provider interface.
@@ -223,7 +224,7 @@ public class AnthropicProvider extends AbstractAIProvider {
 					+ responseUsage.cacheReadInputTokens().orElseGet(() -> 0L);
 			long outputTokens = responseUsage.outputTokens();
 			Usage usage = new Usage(inputTokens, inputCachedTokens, outputTokens);
-			UsageStatistics.addUsage(chatModel, usage);
+			UsageStatistics.addUsage(getModel(), usage);
 		}
 	}
 
@@ -239,7 +240,7 @@ public class AnthropicProvider extends AbstractAIProvider {
 		toolUseList.add(toolUseBlock.toParam());
 		inputs.add(
 				BetaMessageParam.builder().role(Role.ASSISTANT).contentOfBetaContentBlockParams(toolUseList).build());
-		
+
 		Object result = callFunction(toolUse);
 		if (result != null) {
 			BetaToolResultBlockParam.Builder toolResult = BetaToolResultBlockParam.builder().toolUseId(toolUse.id())
@@ -266,7 +267,7 @@ public class AnthropicProvider extends AbstractAIProvider {
 		JsonField<BetaToolUseBlockParam.Input> params = toolUse.toParam()._input();
 		JsonNode node = new ObjectMapper().valueToTree(params);
 		Object result = null;
-		File file = projectDir;
+		File file = getProjectDir();
 		Set<Entry<BetaTool.Builder, ToolFunction>> entrySet = toolMap.entrySet();
 		for (Entry<BetaTool.Builder, ToolFunction> entry : entrySet) {
 			BetaTool tool = entry.getKey().build();
@@ -280,18 +281,18 @@ public class AnthropicProvider extends AbstractAIProvider {
 
 	/**
 	 * Builds a Messages API request from the current conversation and provider
-	 * configuration, including registered local tools, MCP servers, and web
-	 * search when configured.
+	 * configuration, including registered local tools, MCP servers, and web search
+	 * when configured.
 	 *
 	 * @param inputs conversation messages to include in the request
 	 * @return configured immutable request parameters
 	 */
 	private MessageCreateParams createResponseBuilder(List<BetaMessageParam> inputs) {
 		com.anthropic.models.beta.messages.MessageCreateParams.Builder paramsBuilder = MessageCreateParams.builder()
-				.model(chatModel).maxTokens(maxOutputTokens);
+				.model(getModel()).maxTokens(getMaxOutputTokens());
 		paramsBuilder.messages(inputs);
-		if (StringUtils.isNotBlank(instructions))
-			paramsBuilder.system(instructions);
+		if (StringUtils.isNotBlank(getInstructions()))
+			paramsBuilder.system(getInstructions());
 		List<BetaTool.Builder> collect = new ArrayList<>(toolMap.keySet());
 		List<BetaToolUnion> tools = new ArrayList<>(collect.size());
 		for (int i = 0; i < collect.size(); i++) {
@@ -353,7 +354,7 @@ public class AnthropicProvider extends AbstractAIProvider {
 	protected AnthropicClient getClient() {
 		String baseUrl = getConfigurator().get(ANTHROPIC_BASE_URL, null);
 		String privateKey = getConfigurator().get(ANTHROPIC_API_KEY);
-		Long timeout = timeoutSec != null ? timeoutSec : getConfigurator().getLong("GENAI_TIMEOUT", 0L);
+		Long timeout = getConfigurator().getLong("GENAI_TIMEOUT", getTimeout());
 		Builder clientBuilder = AnthropicOkHttpClient.builder();
 		if (privateKey.startsWith("sk-"))
 			clientBuilder.apiKey(privateKey);

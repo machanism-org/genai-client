@@ -108,7 +108,7 @@ public class ToolsProvider extends AbstractAIProvider {
 	@Override
 	public String perform() {
 		String result = null;
-		if ("yaml".equals(chatModel)) {
+		if ("yaml".equals(getModel())) {
 			String yamlPrompt = prompts.get(prompts.size() - 1);
 			Yaml yaml = new Yaml();
 			@SuppressWarnings("rawtypes")

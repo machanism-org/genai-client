@@ -63,9 +63,9 @@ import com.openai.services.blocking.ModelService;
  * OpenAI-backed {@link ProcessProvider} implementation.
  *
  * <p>
- * This provider adapts the Machai provider abstraction to the OpenAI
- * Java SDK Responses API. It supports prompting, file inputs, tool/function
- * calling, optional web search and MCP tools, and embedding generation.
+ * This provider adapts the Machai provider abstraction to the OpenAI Java SDK
+ * Responses API. It supports prompting, file inputs, tool/function calling,
+ * optional web search and MCP tools, and embedding generation.
  * </p>
  *
  * <h2>Configuration</h2>
@@ -424,17 +424,17 @@ public class OpenAIProvider extends AbstractAIProvider implements EmbeddingProvi
 	 * @return immutable request parameters
 	 */
 	private ResponseCreateParams createResponseBuilder(List<ResponseInputItem> inputs) {
-		Builder builder = ResponseCreateParams.builder().model(chatModel);
+		Builder builder = ResponseCreateParams.builder().model(getModel());
 		builder.store(false);
 
-		if (maxToolCalls > 0) {
-			builder.maxToolCalls(maxToolCalls);
+		if (getMaxToolCalls() > 0) {
+			builder.maxToolCalls(getMaxToolCalls());
 		}
-		builder.maxOutputTokens(maxOutputTokens);
-		builder.instructions(instructions);
+		builder.maxOutputTokens(getMaxOutputTokens());
+		builder.instructions(getInstructions());
 		builder.inputOfResponse(inputs);
 
-		if (Strings.CS.startsWithAny(chatModel, "gpt-5.5")) {
+		if (Strings.CS.startsWithAny(getModel(), "gpt-5.5")) {
 			builder.reasoning(Reasoning.builder().effort(ReasoningEffort.NONE).build());
 		}
 
@@ -467,7 +467,7 @@ public class OpenAIProvider extends AbstractAIProvider implements EmbeddingProvi
 			String arguments = functionCall.arguments();
 			JsonNode params = new ObjectMapper().readTree(arguments);
 
-			File file = projectDir;
+			File file = getProjectDir();
 			Set<Entry<Tool, ToolFunction>> entrySet = toolMap.entrySet();
 			for (Entry<Tool, ToolFunction> entry : entrySet) {
 				if (entry.getValue() != null
@@ -502,15 +502,15 @@ public class OpenAIProvider extends AbstractAIProvider implements EmbeddingProvi
 		Configurator config = getConfigurator();
 		String baseUrl = config.get(OPENAI_BASE_URL_NAME);
 		String privateKey = config.get(OPENAI_API_KEY);
-		timeoutSec = config.getLong("GENAI_TIMEOUT", 0L);
+		setTimeout(config.getLong("GENAI_TIMEOUT", 0L));
 
 		OpenAIOkHttpClient.Builder clientBuilder = OpenAIOkHttpClient.builder();
 		clientBuilder.apiKey(privateKey);
 		if (baseUrl != null) {
 			clientBuilder.baseUrl(baseUrl);
 		}
-		if (timeoutSec != 0) {
-			Duration ofSeconds = Duration.ofSeconds(timeoutSec);
+		if (getTimeout() != 0) {
+			Duration ofSeconds = Duration.ofSeconds(getTimeout());
 			Timeout timeout = Timeout.builder().request(ofSeconds).read(ofSeconds).write(ofSeconds)
 					.connect(ofSeconds).build();
 			clientBuilder.timeout(timeout);
@@ -519,7 +519,7 @@ public class OpenAIProvider extends AbstractAIProvider implements EmbeddingProvi
 		clientBuilder.maxRetries(3);
 
 		OpenAIClient client = clientBuilder.build();
-		if (StringUtils.isBlank(chatModel)) {
+		if (StringUtils.isBlank(getModel())) {
 			ModelService models = client.models();
 			List<String> items = models.list().items().stream().map(Model::id).collect(Collectors.toList());
 			throw new IllegalArgumentException(
@@ -549,7 +549,7 @@ public class OpenAIProvider extends AbstractAIProvider implements EmbeddingProvi
 			long outputTokens = responseUsage.outputTokens();
 
 			Usage lastUsage = new Usage(inputTokens, inputCachedTokens, outputTokens);
-			UsageStatistics.addUsage(chatModel, lastUsage);
+			UsageStatistics.addUsage(getModel(), lastUsage);
 		}
 	}
 
@@ -565,7 +565,7 @@ public class OpenAIProvider extends AbstractAIProvider implements EmbeddingProvi
 	public List<Double> embedding(String text, long dimensions) {
 		List<Double> result;
 		if (text != null) {
-			EmbeddingCreateParams params = EmbeddingCreateParams.builder().input(text).model(chatModel)
+			EmbeddingCreateParams params = EmbeddingCreateParams.builder().input(text).model(getModel())
 					.dimensions(dimensions).build();
 			CreateEmbeddingResponse response = getClient().embeddings().create(params);
 			result = response.data().get(0).embedding().stream().map(Double::valueOf).collect(Collectors.toList());

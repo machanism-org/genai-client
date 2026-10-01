@@ -4,45 +4,51 @@
  * Concrete generative-AI provider implementations used by Machai.
  *
  * <p>
- * This package is the integration layer between Machai's provider contracts and
- * remote model APIs. Providers retain the inputs for the current conversation,
- * translate Machai tools and configuration into the SDK-specific request model,
- * submit requests, and translate the final response back to the common
- * {@link org.machanism.machai.process.provider.ProcessProvider} contract. Request-scoped state is retained until
- * {@link org.machanism.machai.process.provider.ProcessProvider#clear()} is called; provider instances should therefore
- * not be shared between concurrent conversations unless the caller supplies the
- * necessary synchronization.
+ * The classes in this package form the integration layer between Machai's
+ * provider contracts and remote model APIs. A provider instance represents one
+ * conversation: it accepts prompts, translates Machai configuration and tool
+ * definitions into SDK-specific request objects, submits requests, resolves
+ * tool calls, records usage, and returns the final result through the common
+ * {@link org.machanism.machai.process.provider.ProcessProvider} contract.
+ * Conversation state is retained until
+ * {@link org.machanism.machai.process.provider.ProcessProvider#clear()} is
+ * called. Consequently, an instance should not be shared by concurrent
+ * conversations unless the caller supplies the required synchronization.
  * </p>
  *
  * <h2>Implementations and relationships</h2>
  * <ul>
- * <li>{@link OpenAIProvider} uses the OpenAI Java SDK Responses API. It supports
- * text prompts, registered function tools, OpenAI web search, MCP server tools,
- * response-usage accounting, and embedding requests. Its API key and optional
- * base URL are read from the supplied
- * {@link org.machanism.macha.core.commons.configurator.Configurator}.</li>
- * <li>{@link AnthropicProvider} uses the Anthropic Java SDK Beta Messages API. It
- * builds user and assistant message history, executes registered local tools,
- * forwards MCP server definitions, supports the configured Anthropic web-search
- * tool versions, applies ephemeral cache control to the final registered local
- * tool, and records input and output usage.</li>
- * <li>{@link CodeMieProvider} is an adapter around the other two implementations.
- * It obtains an OAuth 2.0 access token from EPAM CodeMie using a password grant
- * for an e-mail username or client credentials otherwise, then delegates model
- * requests to {@code OpenAIProvider} for blank, {@code gpt-*}, {@code gemini-*},
+ * <li>{@link OpenAIProvider} adapts the OpenAI Java SDK Responses API. It
+ * supports text prompts, function tools, OpenAI web search, MCP server tools,
+ * response-usage accounting, and embeddings. Its client reads the API key and
+ * optional compatible base URL from the configurator, applies the configured
+ * timeout and output/tool-call limits, and uses the configured model when
+ * creating requests.</li>
+ * <li>{@link AnthropicProvider} adapts the Anthropic Java SDK Beta Messages
+ * API. It maintains user and assistant message history, executes registered
+ * local tools, forwards MCP server definitions, supports the configured
+ * Anthropic web-search tool versions, applies ephemeral cache control to the
+ * final registered local tool, and records input and output usage. The API key,
+ * optional base URL, and timeout are read from the configurator.</li>
+ * <li>{@link CodeMieProvider} is a routing adapter around the OpenAI-compatible
+ * and Anthropic-compatible implementations. It obtains an OAuth 2.0 access
+ * token from EPAM CodeMie using a password grant for an e-mail username or
+ * client credentials otherwise, then refreshes that token when the delegated
+ * client is created. Blank, {@code gpt-*}, {@code gemini-*},
  * {@code text-embedding-*}, {@code codemie-text-embedding-*}, and
- * {@code amazon.titan-embed-text-*} model names. {@code claude-*} names are
- * delegated to {@code AnthropicProvider}; other prefixes are rejected.</li>
+ * {@code amazon.titan-embed-text-*} model names select {@link OpenAIProvider};
+ * {@code claude-*} names select {@link AnthropicProvider}; other prefixes are
+ * rejected.</li>
  * </ul>
  *
  * <h2>Common lifecycle</h2>
  * <p>
- * Initialize a provider with its model and a configured
- * {@code Configurator},
- * add prompts through the provider API, optionally register tools through the
- * surrounding Machai provider or adapter API, and call {@code perform()}. The
- * concrete provider handles tool-call follow-up requests until a final response
- * is available. Embedding-capable implementations additionally implement
+ * Create a provider, initialize it with a model and a configured
+ * {@code Configurator}, add prompts through the provider API, optionally
+ * register tools through the surrounding Machai provider or adapter API, and
+ * call {@code perform()}. Concrete providers submit follow-up requests as
+ * needed to resolve model-issued tool calls. Implementations that support
+ * vector generation also implement
  * {@link org.machanism.machai.process.provider.EmbeddingProvider#embedding(String, long)}.
  * </p>
  *
@@ -55,14 +61,17 @@
  * provider.clear();
  * </pre>
  *
+ * <h2>Configuration and boundaries</h2>
  * <p>
- * Required credentials and optional endpoint, timeout, web-search, MCP, and
- * output-limit settings are provider-specific. See the class-level
+ * Credentials, endpoint selection, timeouts, web search, MCP servers, tool
+ * execution, and output limits are backend-specific. The class-level
  * documentation of {@link OpenAIProvider}, {@link AnthropicProvider}, and
- * {@link CodeMieProvider} for the supported configuration keys and backend
- * behavior. This package provides service adapters, not a general-purpose tool
- * registry; host-side deterministic tool workflows should use the separate tools
- * provider implementation.
+ * {@link CodeMieProvider} describes the supported configuration keys and
+ * delegation behavior. These classes are service adapters, not a general-
+ * purpose tool registry; host-side deterministic tool workflows should use the
+ * separate tools-provider implementation. Provider instances should also be
+ * cleared before reuse so that prompts and tool results from a previous
+ * conversation are not sent with the next request.
  * </p>
  *
  * @author Viktor Tovstyi

@@ -1,0 +1,51 @@
+package org.machanism.machai.process.provider;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.Test;
+import org.machanism.machai.TestConfigurators;
+import org.machanism.machai.process.tools.SpecialException;
+import org.machanism.machai.process.tools.ToolFunction;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+/** Tests common provider state and protected tool error semantics. */
+class AbstractAIProviderTest {
+    private static final class ExposedProvider extends AbstractAIProvider {
+        @Override protected void addTool(String n, String d, ToolFunction f, org.machanism.machai.process.tools.ParamDescriptor... p) { }
+        void initialize() { init("model", TestConfigurators.mapBacked()); }
+        @Override public String perform() { return null; }
+        @Override public java.util.List<String> getToolNames() { return java.util.Collections.emptyList(); }
+        Object invoke(String name, ToolFunction tool, com.fasterxml.jackson.databind.JsonNode node) { return safelyInvokeTool(name, tool, node, null); }
+    }
+
+    @Test
+    void toolErrorsBecomeModelMessageWhenHandlingEnabled() throws Exception {
+        // Arrange
+        ExposedProvider provider = new ExposedProvider();
+        provider.initialize();
+        ObjectNode params = new ObjectMapper().createObjectNode();
+
+        // Act
+        Object result = provider.invoke("bad", (p, context) -> { throw new Exception("boom"); }, params);
+
+        // Assert
+        assertTrue(result.toString().contains(AbstractAIProvider.ERROR_TOOL_RESULT_PREFIX));
+        assertTrue(result.toString().contains("boom"));
+    }
+
+    @Test
+    void disabledErrorHandlingWrapsFailureInSpecialException() {
+        // Arrange
+        ExposedProvider provider = new ExposedProvider();
+        provider.initialize();
+        provider.setErrorHandling(false);
+
+        // Act and assert
+        assertThrows(SpecialException.class, () -> provider.invoke("bad", (p, context) -> {
+            throw new Exception("boom");
+        }, new ObjectMapper().createObjectNode()));
+    }
+}

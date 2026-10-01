@@ -1,4 +1,4 @@
-package org.machanism.machai.process.provider;
+package org.machanism.machai.ai.provider;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,7 +21,8 @@ import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.text.StringSubstitutor;
 import org.machanism.macha.core.commons.configurator.Configurator;
-import org.machanism.machai.process.provider.ToolLogger.Type;
+import org.machanism.machai.ai.provider.ToolLogger.Type;
+import org.machanism.machai.process.provider.ProcessProvider;
 import org.machanism.machai.process.tools.FunctionTools;
 import org.machanism.machai.process.tools.Param;
 import org.machanism.machai.process.tools.ParamDescriptor;
@@ -91,22 +92,22 @@ public abstract class AbstractAIProvider implements ProcessProvider {
 	public static final String PROJECT_DIR_PARAM_NAME = "project-dir";
 
 	/** Active model identifier used in {@link #perform()}. */
-	private String model;
+	protected String chatModel;
 
 	/** Working directory passed to tool handlers as contextual information. */
-	private File projectDir;
+	protected File projectDir;
 
 	/** Request timeout in seconds; {@code 0} means SDK defaults are used. */
-	private long timeoutSec;
+	protected Long timeoutSec;
 
 	/** Optional instructions applied to the request. */
-	private String instructions;
+	protected String instructions;
 
 	/** Maximum number of output tokens for responses. */
-	private Long maxOutputTokens;
+	protected Long maxOutputTokens;
 
 	/** Maximum number of tool calls permitted per response. */
-	private Long maxToolCalls;
+	protected Long maxToolCalls;
 
 	/** Configuration source used to initialize clients and provider features. */
 	private Configurator config;
@@ -137,10 +138,10 @@ public abstract class AbstractAIProvider implements ProcessProvider {
 	@Override
 	public void init(String model, Configurator config) {
 		this.config = config;
-		this.model = model;
+		chatModel = model;
 
-		setMaxOutputTokens(config.getLong("MAX_OUTPUT_TOKENS", MAX_OUTPUT_TOKENS));
-		setMaxToolCalls(config.getLong("MAX_TOOL_CALLS", 0L));
+		maxOutputTokens = config.getLong("MAX_OUTPUT_TOKENS", MAX_OUTPUT_TOKENS);
+		maxToolCalls = config.getLong("MAX_TOOL_CALLS", 0L);
 
 		addWebSearch();
 		addMcpServers();
@@ -280,7 +281,7 @@ public abstract class AbstractAIProvider implements ProcessProvider {
 	 */
 	@Override
 	public void instructions(String instructions) {
-		this.setInstructions(instructions);
+		this.instructions = instructions;
 	}
 
 	/**
@@ -893,62 +894,6 @@ public abstract class AbstractAIProvider implements ProcessProvider {
 	 */
 	public Configurator getConfigurator() {
 		return config;
-	}
-
-	/**
-	 * @return the model
-	 */
-	public String getModel() {
-		return model;
-	}
-
-	/**
-	 * @param model the model to set
-	 */
-	public void setModel(String model) {
-		this.model = model;
-	}
-
-	/**
-	 * @return the maxOutputTokens
-	 */
-	public Long getMaxOutputTokens() {
-		return maxOutputTokens;
-	}
-
-	/**
-	 * @param maxOutputTokens the maxOutputTokens to set
-	 */
-	public void setMaxOutputTokens(Long maxOutputTokens) {
-		this.maxOutputTokens = maxOutputTokens;
-	}
-
-	/**
-	 * @return the instructions
-	 */
-	public String getInstructions() {
-		return instructions;
-	}
-
-	/**
-	 * @param instructions the instructions to set
-	 */
-	public void setInstructions(String instructions) {
-		this.instructions = instructions;
-	}
-
-	/**
-	 * @return the maxToolCalls
-	 */
-	public Long getMaxToolCalls() {
-		return maxToolCalls;
-	}
-
-	/**
-	 * @param maxToolCalls the maxToolCalls to set
-	 */
-	public void setMaxToolCalls(Long maxToolCalls) {
-		this.maxToolCalls = maxToolCalls;
 	}
 
 }
