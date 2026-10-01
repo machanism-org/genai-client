@@ -8,6 +8,9 @@ import java.lang.reflect.Method;
 
 import org.junit.jupiter.api.Test;
 import org.machanism.machai.TestConfigurators;
+import org.machanism.machai.genai.provider.AnthropicProvider;
+import org.machanism.machai.genai.provider.CodeMieProvider;
+import org.machanism.machai.genai.provider.OpenAIProvider;
 import org.machanism.machai.process.tools.ParamDescriptor;
 
 import com.anthropic.models.beta.messages.BetaMessageParam;

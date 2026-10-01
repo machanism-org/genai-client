@@ -1,4 +1,4 @@
-package org.machanism.machai.ai.provider;
+package org.machanism.machai.genai.provider;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,7 +21,7 @@ import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.text.StringSubstitutor;
 import org.machanism.macha.core.commons.configurator.Configurator;
-import org.machanism.machai.ai.provider.ToolLogger.Type;
+import org.machanism.machai.genai.provider.ToolLogger.Type;
 import org.machanism.machai.process.provider.ProcessProvider;
 import org.machanism.machai.process.tools.FunctionTools;
 import org.machanism.machai.process.tools.Param;

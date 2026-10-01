@@ -358,7 +358,7 @@ This means a custom tool method can combine model-supplied arguments with applic
 
 ## OpenAI-specific functional tools
 
-`OpenAIProvider` (`src/main/java/org/machanism/machai/ai/provider/impl/OpenAIProvider.java`) adds two provider-native tool types in addition to host-managed Java tools. The provider stores all of these definitions in its internal tool map. Its current `getToolNames()` implementation assumes every map entry is a function tool, so callers should not use that method after registering web-search or MCP entries unless the provider implementation is updated to filter non-function tools first.
+`OpenAIProvider` (`src/main/java/org/machanism/machai/genai/provider/OpenAIProvider.java`) adds two provider-native tool types in addition to host-managed Java tools. The provider stores all of these definitions in its internal tool map. Its current `getToolNames()` implementation assumes every map entry is a function tool, so callers should not use that method after registering web-search or MCP entries unless the provider implementation is updated to filter non-function tools first.
 
 - built-in OpenAI web search,
 - MCP server tools.

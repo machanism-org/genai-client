@@ -35,7 +35,7 @@ The main package areas are:
 
 - `org.machanism.machai.process.manager` resolves configured provider identifiers, initializes provider instances, and records token usage by model.
 - `org.machanism.machai.process.provider` defines the common provider contracts and reusable base behavior for conversational, embedding, tool-enabled, web-search-enabled, and MCP-enabled AI integrations.
-- `org.machanism.machai.ai.provider.impl` contains concrete provider implementations for OpenAI-compatible APIs, Anthropic Claude, CodeMie, and direct host-side tool execution.
+- `org.machanism.machai.genai.provider` contains concrete provider implementations for OpenAI-compatible APIs, Anthropic Claude, and CodeMie, while `org.machanism.machai.process.provider` contains the direct host-side Tools and None providers.
 - `org.machanism.machai.process.tools` defines tool, prompt, resource, parameter, role, and supported-application metadata, plus service loading and callback contracts used to expose Java methods as AI-accessible capabilities.
 
 ## Supported AI providers

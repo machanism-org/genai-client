@@ -28,7 +28,7 @@ import org.machanism.machai.process.provider.ProcessProvider;
  * Embedding-provider identifiers containing a dot ({@code .}) are treated as
  * fully qualified class names.</li>
  * <li>Other provider identifiers are resolved using the pattern
- * {@code org.machanism.machai.ai.provider.impl.{provider}Provider}.</li>
+ * {@code org.machanism.machai.genai.provider.impl.{provider}Provider}.</li>
  * </ul>
  *
  * <h2>Usage Example</h2>
@@ -53,7 +53,7 @@ public class ProcessProviderManager {
 	 * from a provider identifier.
 	 */
 	private static final String[] PROCESS_PROVIDER_CLASS_NAME_PATTERNS = {
-			"org.machanism.machai.ai.provider.impl.%sProvider", "org.machanism.machai.process.provider.impl.%sProvider" };
+			"org.machanism.machai.genai.provider.%sProvider", "org.machanism.machai.process.provider.%sProvider" };
 
 	/**
 	 * Private constructor to prevent instantiation of this utility class.
@@ -180,7 +180,7 @@ public class ProcessProviderManager {
 	 * @param providerName the provider identifier (for example, {@code OpenAI}) or
 	 *                     fully qualified embedding-provider class name. A simple
 	 *                     identifier resolves using
-	 *                     {@code org.machanism.machai.ai.provider.impl.%sProvider}.
+	 *                     {@code org.machanism.machai.genai.provider.impl.%sProvider}.
 	 * @return the resolved class name
 	 * @throws ClassNotFoundException
 	 */

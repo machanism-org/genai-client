@@ -64,7 +64,7 @@
     {
       "package": "org.machanism.machai.process.manager",
       "signature": "static org.machanism.machai.process.provider.ProcessProvider org.machanism.machai.process.manager.ProcessProviderManager.getProvider(java.lang.String chatModel, org.machanism.macha.core.commons.configurator.Configurator conf)",
-      "description": "Resolves, constructs, and initializes a Genai implementation from a Provider:Model identifier. Conventional names resolve under org.machanism.machai.ai.provider.impl, while a dotted provider segment is treated as a fully qualified class name.",
+      "description": "Resolves, constructs, and initializes a Genai implementation from a Provider:Model identifier. Conventional names resolve under org.machanism.machai.genai.provider.impl, while a dotted provider segment is treated as a fully qualified class name.",
       "examples": [
         {
           "snippet": "org.machanism.macha.core.commons.configurator.Configurator conf = getApplicationConfigurator();\norg.machanism.machai.ai.provider.Genai provider = org.machanism.machai.process.manager.ProcessProviderManager.getProvider(\"OpenAI:gpt-4o-mini\", conf);\nprovider.instructions(\"You are a concise assistant.\");\nprovider.prompt(\"Summarize the project architecture.\");\njava.lang.String answer = provider.perform();\nprovider.clear();",
@@ -84,18 +84,18 @@
       ]
     },
     {
-      "package": "org.machanism.machai.ai.provider.impl",
-      "signature": "public org.machanism.machai.ai.provider.impl.OpenAIProvider()",
+      "package": "org.machanism.machai.genai.provider.impl",
+      "signature": "public org.machanism.machai.genai.provider.OpenAIProvider()",
       "description": "Creates an OpenAI-compatible Genai and EmbeddingProvider implementation. Initialize it with a model and Configurator before sending prompts or embedding text.",
       "examples": [
         {
-          "snippet": "org.machanism.machai.ai.provider.impl.OpenAIProvider provider = new org.machanism.machai.ai.provider.impl.OpenAIProvider();\nprovider.init(\"gpt-4.1\", getApplicationConfigurator());\nprovider.prompt(\"Write a release note.\");\njava.lang.String response = provider.perform();",
+          "snippet": "org.machanism.machai.genai.provider.OpenAIProvider provider = new org.machanism.machai.genai.provider.OpenAIProvider();\nprovider.init(\"gpt-4.1\", getApplicationConfigurator());\nprovider.prompt(\"Write a release note.\");\njava.lang.String response = provider.perform();",
           "description": "Uses a direct provider instance; configure OPENAI_API_KEY and optionally OPENAI_BASE_URL, timeout, web search, or MCP settings first."
         }
       ]
     },
     {
-      "package": "org.machanism.machai.ai.provider.impl",
+      "package": "org.machanism.machai.genai.provider.impl",
       "signature": "public org.machanism.machai.process.provider.impl.AnthropicProvider()",
       "description": "Creates an Anthropic-backed Genai implementation supporting prompts, local function tools, optional web search, MCP forwarding, and usage capture.",
       "examples": [
@@ -120,13 +120,13 @@
       ]
     },
     {
-      "package": "org.machanism.machai.ai.provider.impl",
+      "package": "org.machanism.machai.genai.provider.impl",
       "name": "OpenAI embeddings",
-      "signature": "java.util.List<java.lang.Double> org.machanism.machai.ai.provider.impl.OpenAIProvider.embedding(java.lang.String text, long dimensions)",
+      "signature": "java.util.List<java.lang.Double> org.machanism.machai.genai.provider.OpenAIProvider.embedding(java.lang.String text, long dimensions)",
       "description": "Generates an embedding vector through an OpenAI-compatible embedding endpoint. Returns null for null input.",
       "examples": [
         {
-          "snippet": "org.machanism.machai.ai.provider.impl.OpenAIProvider provider = new org.machanism.machai.ai.provider.impl.OpenAIProvider();\nprovider.init(\"text-embedding-3-small\", getApplicationConfigurator());\njava.util.List<java.lang.Double> embedding = provider.embedding(\"Machai provider abstraction\", 1536L);",
+          "snippet": "org.machanism.machai.genai.provider.OpenAIProvider provider = new org.machanism.machai.genai.provider.OpenAIProvider();\nprovider.init(\"text-embedding-3-small\", getApplicationConfigurator());\njava.util.List<java.lang.Double> embedding = provider.embedding(\"Machai provider abstraction\", 1536L);",
           "description": "Creates a vector suitable for storing with a document in a semantic-search index."
         }
       ]
@@ -156,9 +156,9 @@
       ]
     },
     {
-      "package": "org.machanism.machai.ai.provider.impl",
+      "package": "org.machanism.machai.genai.provider.impl",
       "name": "Local YAML tool execution",
-      "signature": "public java.lang.String org.machanism.machai.process.provider.impl.ToolsProvider.perform()",
+      "signature": "public java.lang.String org.machanism.machai.process.provider.ToolsProvider.perform()",
       "description": "Executes a locally registered tool from the final YAML prompt when initialized with the yaml model. This fail-fast provider is intended for deterministic, tool-only host-side workflows.",
       "examples": [
         {
@@ -213,7 +213,7 @@
       "package": "org.machanism.machai.process.provider",
       "type": "interface",
       "description": "Boundary for providers that initialize with a model and configuration and generate java.util.List<java.lang.Double> embeddings.",
-      "implement": "org.machanism.machai.ai.provider.impl.OpenAIProvider",
+      "implement": "org.machanism.machai.genai.provider.OpenAIProvider",
       "examples": [
         {
           "snippet": "org.machanism.machai.process.provider.EmbeddingProvider provider = org.machanism.machai.process.manager.ProcessProviderManager.getEmbeddingProvider(\"OpenAI:text-embedding-3-small\", getApplicationConfigurator());\njava.util.List<java.lang.Double> vector = provider.embedding(\"Semantic-search document\", 1536L);",

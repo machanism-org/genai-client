@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
+import org.machanism.machai.genai.provider.AnthropicProvider;
+import org.machanism.machai.genai.provider.OpenAIProvider;
 import org.machanism.machai.process.tools.ParamDescriptor;
 
 /** Covers tool registration identity and CodeMie delegation edge cases. */

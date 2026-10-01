@@ -1,4 +1,4 @@
-package org.machanism.machai.ai.provider.impl;
+package org.machanism.machai.genai.provider;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;

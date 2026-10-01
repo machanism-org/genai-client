@@ -1,4 +1,4 @@
-package org.machanism.machai.ai.provider;
+package org.machanism.machai.genai.provider;
 
 import java.io.File;
 import java.lang.reflect.Constructor;

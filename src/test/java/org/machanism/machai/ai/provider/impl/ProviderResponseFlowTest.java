@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
 import org.machanism.machai.TestConfigurators;
+import org.machanism.machai.genai.provider.OpenAIProvider;
 
 import com.openai.client.OpenAIClient;
 import com.openai.models.responses.Response;
@@ -58,7 +59,7 @@ class ProviderResponseFlowTest {
 
 		// Assert
 		assertEquals("tool answer", result);
-		assertEquals(3, provider.inputs.size());
+		assertEquals(3, provider.inputCount());
 		verify(client.responses(), times(2)).create(any(ResponseCreateParams.class));
 	}
 
@@ -110,6 +111,16 @@ class ProviderResponseFlowTest {
 
 		void register(String name, org.machanism.machai.process.tools.ToolFunction function) {
 			addTool(name, "test tool", function);
+		}
+
+		int inputCount() {
+			try {
+				java.lang.reflect.Field field = OpenAIProvider.class.getDeclaredField("inputs");
+				field.setAccessible(true);
+				return ((java.util.List<?>) field.get(this)).size();
+			} catch (ReflectiveOperationException e) {
+				throw new AssertionError(e);
+			}
 		}
 	}
 

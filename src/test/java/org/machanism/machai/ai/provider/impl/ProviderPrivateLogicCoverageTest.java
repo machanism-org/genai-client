@@ -10,6 +10,8 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import org.junit.jupiter.api.Test;
+import org.machanism.machai.genai.provider.CodeMieProvider;
+import org.machanism.machai.genai.provider.OpenAIProvider;
 
 import com.openai.models.responses.ResponseReasoningItem;
 
@@ -18,10 +20,7 @@ class ProviderPrivateLogicCoverageTest {
 
     @Test
     void openAiConfigurationSettersAndPromptStateAreObservable() {
-        // Arrange
-        OpenAIProvider provider = new OpenAIProvider();
-
-        // Act
+        ExposedOpenAIProvider provider = new ExposedOpenAIProvider();
         provider.setProjectDir(new java.io.File("project"));
         provider.setErrorHandling(true);
         provider.setMaxOutputTokens(77L);
@@ -29,20 +28,18 @@ class ProviderPrivateLogicCoverageTest {
         provider.instructions("system");
         provider.prompt("hello");
 
-        // Assert
         assertEquals("project", provider.getProjectDir().getPath());
         assertTrue(provider.isErrorHandling());
         assertEquals(77L, provider.getMaxOutputTokens());
         assertEquals(4L, provider.getMaxToolCalls());
         assertEquals("system", provider.getInstructions());
-        assertFalse(provider.inputs.isEmpty());
+        assertTrue(provider.hasInputs());
         provider.clear();
-        assertTrue(provider.inputs.isEmpty());
+        assertFalse(provider.hasInputs());
     }
 
     @Test
     void firstNonBlankReasoningReturnsFirstUsefulFragmentOrNull() throws Exception {
-        // Arrange
         OpenAIProvider provider = new OpenAIProvider();
         ResponseReasoningItem.Content blank = org.mockito.Mockito.mock(ResponseReasoningItem.Content.class);
         ResponseReasoningItem.Content useful = org.mockito.Mockito.mock(ResponseReasoningItem.Content.class);
@@ -51,25 +48,30 @@ class ProviderPrivateLogicCoverageTest {
         Method method = OpenAIProvider.class.getDeclaredMethod("firstNonBlankReasoning", java.util.List.class);
         method.setAccessible(true);
 
-        // Act
         String result = (String) method.invoke(provider, Arrays.asList(blank, useful));
         String noResult = (String) method.invoke(provider, Collections.singletonList(blank));
 
-        // Assert
         assertEquals("reasoning", result);
         assertNull(noResult);
     }
 
     @Test
     void codeMieUrlEncodingEncodesSpacesAndReservedCharacters() throws Exception {
-        // Arrange
         Method method = CodeMieProvider.class.getDeclaredMethod("urlEncode", String.class);
         method.setAccessible(true);
-
-        // Act
         String result = (String) method.invoke(null, "a b+&");
-
-        // Assert
         assertEquals("a+b%2B%26", result);
+    }
+
+    private static final class ExposedOpenAIProvider extends OpenAIProvider {
+        boolean hasInputs() {
+            try {
+                java.lang.reflect.Field field = OpenAIProvider.class.getDeclaredField("inputs");
+                field.setAccessible(true);
+                return !((java.util.List<?>) field.get(this)).isEmpty();
+            } catch (ReflectiveOperationException e) {
+                throw new AssertionError(e);
+            }
+        }
     }
 }

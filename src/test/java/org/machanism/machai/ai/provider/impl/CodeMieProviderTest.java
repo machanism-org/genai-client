@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.Test;
+import org.machanism.machai.genai.provider.CodeMieProvider;
 
 import com.sun.net.httpserver.HttpServer;
 

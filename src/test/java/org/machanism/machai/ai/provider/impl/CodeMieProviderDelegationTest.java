@@ -13,6 +13,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.machanism.macha.core.commons.configurator.Configurator;
+import org.machanism.machai.genai.provider.CodeMieProvider;
 import org.machanism.machai.process.provider.EmbeddingProvider;
 import org.machanism.machai.process.provider.ProcessProvider;
 

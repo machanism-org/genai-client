@@ -41,6 +41,11 @@ class TypeConverterTest {
         assertEquals("object", TypeConverter.get(Map.class));
         assertEquals("object", TypeConverter.get(null));
         assertEquals("object", TypeConverter.get(Object.class));
+        assertEquals("string", TypeConverter.get(java.io.File.class));
+        assertEquals("integer", TypeConverter.get(Integer.class));
+        assertEquals("number", TypeConverter.get(double.class));
+        assertEquals("boolean", TypeConverter.get(boolean.class));
+        assertEquals("object", TypeConverter.get(com.fasterxml.jackson.databind.JsonNode.class));
     }
 
     @Test
@@ -67,6 +72,7 @@ class TypeConverterTest {
     void convertToType_handlesRawAndBlankMaps() throws Exception {
         assertEquals(Collections.emptyMap(), TypeConverter.convertToType(parameter(6), ""));
         assertInstanceOf(Map.class, TypeConverter.convertToType(parameter(6), " "));
+        assertEquals(Collections.emptyMap(), TypeConverter.convertToType(parameter(4), ""));
     }
 
     @Test

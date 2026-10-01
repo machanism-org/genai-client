@@ -7,7 +7,7 @@ import java.io.File;
 
 import org.junit.jupiter.api.Test;
 import org.machanism.machai.TestConfigurators;
-import org.machanism.machai.process.provider.impl.NoneProvider;
+import org.machanism.machai.process.provider.NoneProvider;
 
 /** Unit tests for the deliberately inert provider. */
 class NoneProviderTest {

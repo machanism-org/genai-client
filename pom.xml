@@ -23,7 +23,6 @@
 	<properties>
 		<maven.compiler.release>8</maven.compiler.release>
 		<maven.javadoc.skip>false</maven.javadoc.skip>
-		<plantuml-generator.scanPackages>org.machanism.machai.ai*</plantuml-generator.scanPackages>
 	</properties>
 
 	<dependencies>
@@ -120,6 +119,31 @@
 		</dependency>
 	</dependencies>
 
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>de.elnarion.maven</groupId>
+				<artifactId>plantuml-generator-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>gen-class-diagram</id>
+						<phase>site</phase>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<scanPackages>
+								<scanPackage>
+									org.machanism.machai.genai.provider*</scanPackage>
+								<scanPackage>org.machanism.machai.process*</scanPackage>
+							</scanPackages>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
 	<reporting>
 		<plugins>
 			<plugin>
@@ -149,7 +173,8 @@
 
 	<scm>
 		<connection>scm:git:https://github.com/machanism-org/genai-client.git</connection>
-		<developerConnection>scm:git:https://github.com/machanism-org/genai-client.git</developerConnection>
+		<developerConnection>
+			scm:git:https://github.com/machanism-org/genai-client.git</developerConnection>
 		<url>https://github.com/machanism-org/genai-client.git</url>
 	</scm>
 

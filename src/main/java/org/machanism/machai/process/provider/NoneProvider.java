@@ -1,4 +1,4 @@
-package org.machanism.machai.process.provider.impl;
+package org.machanism.machai.process.provider;
 
 import java.io.File;
 import java.util.Collections;
@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.Strings;
 import org.machanism.macha.core.commons.configurator.Configurator;
-import org.machanism.machai.process.provider.ProcessProvider;
 import org.machanism.machai.process.tools.FunctionTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

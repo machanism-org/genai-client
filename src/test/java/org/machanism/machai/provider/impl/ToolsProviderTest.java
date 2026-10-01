@@ -13,7 +13,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.machanism.macha.core.commons.configurator.Configurator;
 import org.machanism.machai.process.provider.AbstractAIProvider;
-import org.machanism.machai.process.provider.impl.ToolsProvider;
+import org.machanism.machai.process.provider.ToolsProvider;
 import org.machanism.machai.process.tools.FunctionTools;
 import org.machanism.machai.process.tools.Param;
 import org.machanism.machai.process.tools.Tool;

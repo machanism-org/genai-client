@@ -1,122 +1,108 @@
 /* @guidance: >>> ${guidances}/package-info-javadoc.md */
 
 /**
- * Public contracts and reusable infrastructure for application-facing process
- * providers.
+ * Provider contracts, reusable lifecycle infrastructure, and local dispatch
+ * implementations for Machai process integrations.
  *
  * <p>
- * A process provider is an adapter between an application and a generative-AI
- * backend, local model, or deliberately disabled implementation. This package
- * keeps the lifecycle contract independent of vendor SDKs: callers initialize a
- * provider with a model identifier and a {@link org.machanism.macha.core.commons.configurator.Configurator},
- * supply instructions and prompts, register optional capabilities, execute the
- * request, and inspect the result through the same API. Provider instances are
- * generally stateful and should be treated as non-thread-safe unless an
- * implementation documents otherwise.
+ * The package separates provider-facing orchestration from provider-specific
+ * transport code. {@link ProcessProvider} defines the common lifecycle for
+ * initialization, instructions, prompts, tool and resource registration,
+ * execution, project-directory context, error handling, and state clearing.
+ * Implementations may retain conversation or request state between calls, so a
+ * caller should use {@link ProcessProvider#clear()} when beginning an
+ * independent request and should not assume that every implementation has the
+ * same execution semantics.
  * </p>
  *
- * <h2>Public contracts</h2>
+ * <h2>Provider contracts and decorators</h2>
  * <ul>
  * <li>
- * {@link ProcessProvider} defines the conversational lifecycle. It includes
- * initialization, prompts and instructions, request clearing, reflective tool,
- * prompt, and resource registration, project-directory context, registered-tool
- * inspection, execution, and tool-error handling policy.
+ * {@link ProcessProvider} is the primary abstraction for conversational or
+ * process-oriented providers. {@link EmbeddingProvider} is the separate
+ * contract for providers that turn text into embedding vectors.
  * </li>
  * <li>
- * {@link EmbeddingProvider} is an independent contract for generating a numeric
- * vector from text. An embedding implementation does not need to support
- * conversational prompts or function tools, although one implementation may
- * also implement {@link ProcessProvider}.
+ * {@link ProcessProviderAdapter} is a delegating implementation useful for
+ * decorating a provider with application-level concerns such as logging,
+ * metrics, retries, or request shaping. Set its delegate before forwarding
+ * lifecycle calls.
+ * </li>
+ * <li>
+ * {@link AbstractAIProvider} supplies shared state and reflection-based
+ * registration for methods annotated with
+ * {@link org.machanism.machai.process.tools.Tool},
+ * {@link org.machanism.machai.process.tools.Prompt}, and
+ * {@link org.machanism.machai.process.tools.Resource}. It also provides model,
+ * configuration, project-directory, instruction, token-limit, and tool-error
+ * handling state for concrete subclasses.
  * </li>
  * </ul>
  *
- * <h2>Shared implementation services</h2>
+ * <h2>Included implementations</h2>
  * <ul>
  * <li>
- * {@link AbstractAIProvider} is the extension point for backend integrations. It
- * stores model, configurator, instruction, project-directory, timeout, and output
- * limit state; reads optional MCP and web-search settings; discovers annotated
- * capabilities by reflection; converts arguments; logs activity; and provides
- * guarded tool invocation. Concrete subclasses supply backend-specific request
- * construction and registration hooks.
+ * {@link NoneProvider} is an intentional no-op provider. It accepts lifecycle
+ * input without retaining or processing it, returns {@code null} from
+ * {@link NoneProvider#perform()}, and always reports an immutable empty tool
+ * list. Initializing it with model {@code "log"} enables diagnostic INFO
+ * messages; other model values disable those messages.
  * </li>
  * <li>
- * {@link ProcessProviderAdapter} is a delegating decorator for cross-cutting
- * concerns such as logging, metrics, retries, or request transformation. Set a
- * delegate with {@link ProcessProviderAdapter#setProvider(ProcessProvider)}
- * before using it; otherwise calls cannot be forwarded. The adapter is not
- * thread-safe unless the delegate and calling arrangement provide that guarantee.
- * </li>
- * <li>
- * {@link TypeConverter} is a non-instantiable utility used by reflective
- * handlers. It maps supported Java parameter classes to simple schema names and
- * converts textual values into primitive wrappers, strings, files, collections,
- * maps, and JSON-backed objects.
- * </li>
- * <li>
- * {@link ToolLogger} is package-private logging infrastructure for tool, prompt,
- * and resource activity. Informational messages abbreviate payloads, while debug
- * messages retain serialized payloads and failure details.
+ * {@link ToolsProvider} is a lightweight local dispatcher. It stores prompts,
+ * keeps registered tools in registration order, and, when initialized with
+ * model {@code "yaml"}, parses the most recently submitted prompt as a YAML
+ * mapping. The mapping must contain a {@code tool} name and may contain
+ * {@code params}; the named function is invoked, with non-string results
+ * serialized as JSON. A YAML execution requires at least one prompt. Register
+ * annotated functions through
+ * {@link ProcessProvider#addTools(org.machanism.machai.process.tools.FunctionTools,
+ * String[])} rather than calling the protected registration hook directly.
  * </li>
  * </ul>
  *
- * <h2>Concrete implementations</h2>
+ * <h2>Supporting utilities</h2>
  * <p>
- * Implementations are organized in subpackages. The {@code impl} package
- * provides {@link org.machanism.machai.process.provider.impl.NoneProvider}, a
- * no-op provider whose execution result is always {@code null}, and
- * {@link org.machanism.machai.process.provider.impl.ToolsProvider}, a local
- * provider that dispatches a YAML-described call to a registered Java tool when
- * initialized with the {@code "yaml"} model. Other adapters can live in their
- * own subpackages while implementing the contracts defined here.
+ * {@link ToolLogger} records tool, prompt, and resource invocation details while
+ * abbreviating payloads at INFO level and retaining complete payloads at DEBUG
+ * level. {@link TypeConverter} converts reflected tool parameters from string
+ * or JSON representations and maps Java parameter types to simplified schema
+ * type names. These utilities support the provider infrastructure and are not
+ * provider-selection mechanisms.
  * </p>
  *
- * <h2>Request lifecycle</h2>
+ * <h2>Typical usage</h2>
  * <p>
- * A typical conversational request initializes a provider, optionally sets
- * instructions and a project directory, registers capabilities, adds one or
- * more prompts, and calls {@link ProcessProvider#perform()}. The meaning of
- * {@link ProcessProvider#clear()} and whether state is retained after execution
- * are implementation-specific. In particular, callers should consult the
- * selected implementation before assuming that {@code clear()} removes every
- * kind of registered capability. Configure
- * {@link ProcessProvider#setErrorHandling(boolean)} according to whether tool
- * failures should be returned to the model as text or propagated to the caller.
+ * The following example registers annotated host functions and dispatches a
+ * YAML request. The YAML {@code tool} value must match a registered function
+ * name; the {@code Configurator} setup is application-specific.
  * </p>
- *
- * <h2>Conversational usage</h2>
  * <pre>
- * Configurator configurator = ...;
- * ProcessProvider provider = ...;
- * provider.init("model-id", configurator);
- * provider.instructions("You are a helpful assistant.");
- * provider.prompt("Summarize the project architecture.");
- * String response = provider.perform();
+ * ProcessProvider provider = new ToolsProvider();
+ * provider.init("yaml", configurator);
+ * provider.addTools(functionTools, null);
+ * provider.prompt("tool: summarize\nparams:\n  path: README.md");
+ * String result = provider.perform();
  * provider.clear();
  * </pre>
  *
- * <h2>Embedding usage</h2>
- * <pre>
- * Configurator configurator = ...;
- * EmbeddingProvider provider = ...;
- * provider.init("embedding-model", configurator);
- * java.util.List&lt;Double&gt; vector = provider.embedding("example text", 384);
- * </pre>
- *
  * <p>
- * Reflective capabilities are supplied by application classes implementing
- * {@link org.machanism.machai.process.tools.FunctionTools}. Methods annotated
- * with the package's tool, prompt, or resource annotations are discovered by
- * {@link AbstractAIProvider}; their names, descriptions, parameter descriptors,
- * and invocation callbacks are then exposed through the corresponding
- * registration methods on {@link ProcessProvider}.
+ * Use the no-op implementation when processing must be deliberately disabled:
  * </p>
+ * <pre>
+ * ProcessProvider provider = new NoneProvider();
+ * provider.init("log", configurator);
+ * provider.prompt("This input is accepted and discarded.");
+ * String result = provider.perform(); // always null
+ * </pre>
  *
  * @see ProcessProvider
  * @see EmbeddingProvider
  * @see AbstractAIProvider
  * @see ProcessProviderAdapter
+ * @see NoneProvider
+ * @see ToolsProvider
+ * @see ToolLogger
  * @see TypeConverter
  * @since 1.2.0
  */

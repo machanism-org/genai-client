@@ -147,6 +147,24 @@ class ToolsMetadataTest {
     }
 
     @Test
+    void annotationTargetsAndSupportedForDefaults_matchTheirRuntimeContracts() {
+        // Arrange
+        Target promptTarget = Prompt.class.getAnnotation(Target.class);
+        Target paramTarget = Param.class.getAnnotation(Target.class);
+        SupportedFor unrestricted = UnrestrictedFixture.class.getAnnotation(SupportedFor.class);
+
+        // Act
+        Class<?>[] supported = unrestricted.value();
+        Class<?>[] excluded = unrestricted.excludes();
+
+        // Assert
+        assertTrue(contains(promptTarget, ElementType.METHOD));
+        assertTrue(contains(paramTarget, ElementType.PARAMETER));
+        assertEquals(0, supported.length);
+        assertEquals(0, excluded.length);
+    }
+
+    @Test
     void markerInterfaces_andResourceDefaults_areUsable() throws Exception {
         // Arrange
         FunctionTools tools = new FunctionTools() { };
@@ -273,4 +291,7 @@ class ToolsMetadataTest {
 
     @SupportedFor({MetadataFixture.class, String.class})
     static class SupportedFixture implements FunctionTools { }
+
+    @SupportedFor
+    static class UnrestrictedFixture implements FunctionTools { }
 }

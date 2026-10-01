@@ -15,9 +15,9 @@ LAYOUT_WITH_LEGEND()
 
 title Machai GenAI Client - C4 Component Diagram
 
-Person(hostApplication, "Host Application", "Supplies configuration, selects a provider, sends prompts, and contributes local capabilities.")
+Person(hostApplication, "Host Application", "Configures the library, selects a provider, submits prompts, and supplies local capabilities.")
 
-System_Ext(configuration, "Application Configuration", "Provider credentials, model, limits, web-search, MCP, and tool settings supplied by the host.")
+System_Ext(configuration, "Application Configuration", "Provider credentials, model limits, web search, MCP, and tool settings.")
 System_Ext(openaiApi, "OpenAI-compatible API", "Responses, embeddings, web search, and MCP endpoints.")
 System_Ext(anthropicApi, "Anthropic API", "Messages API with tool use, web search, and MCP support.")
 System_Ext(codeMieAuth, "CodeMie OIDC Token Endpoint", "Issues OAuth 2.0 access tokens.")
@@ -25,37 +25,38 @@ System_Ext(codeMieApi, "CodeMie Code Assistant API", "OpenAI- and Anthropic-comp
 System_Ext(mcpServers, "MCP Servers", "Optional Model Context Protocol servers configured by the host.")
 
 System_Boundary(genaiClient, "Machai GenAI Client Library") {
-    Boundary(publicApi, "Public Provider API") {
-        Component(processProvider, "ProcessProvider", "Java interface", "Public lifecycle, prompt, instruction, execution, tool, prompt, resource, and error-handling contract.")
-        Component(embeddingProvider, "EmbeddingProvider", "Java interface", "Contract for embedding-vector generation.")
-        Component(adapter, "ProcessProviderAdapter", "Java adapter", "Delegates the ProcessProvider contract to a configured provider.")
+    Boundary(publicApi, "Provider API") {
+        Component(processProvider, "ProcessProvider", "Java interface", "Provider lifecycle, instructions, prompts, execution, tools, resources, project context, and error handling.")
+        Component(embeddingProvider, "EmbeddingProvider", "Java interface", "Contract for generating embedding vectors.")
+        Component(adapter, "ProcessProviderAdapter", "Java adapter", "Delegates the ProcessProvider API to a configured provider instance.")
     }
 
     Boundary(providerImplementations, "Provider Implementations") {
-        Component(baseProvider, "AbstractAIProvider", "Java abstract class", "Shared configuration, web-search and MCP bootstrap, capability registration, callback invocation, argument conversion, and error handling.")
-        Component(openaiProvider, "OpenAIProvider", "Java component", "Executes Responses API requests, local function-tool loops, web search, MCP tools, usage capture, and embeddings.")
-        Component(anthropicProvider, "AnthropicProvider", "Java component", "Executes Anthropic Messages API requests and local tool-use loops.")
-        Component(codeMieProvider, "CodeMieProvider", "Java component", "Obtains OIDC tokens and delegates models to OpenAI- or Anthropic-compatible CodeMie providers.")
-        Component(toolsProvider, "ToolsProvider", "Java component", "Executes a registered local tool described by a YAML prompt.")
-        Component(noneProvider, "NoneProvider", "Java component", "Safe no-op provider for disabled processing or tests.")
+        Component(baseProvider, "AbstractAIProvider", "Java abstract class", "Shared configuration, web-search and MCP bootstrap, reflection-based capability registration, argument conversion, callbacks, and error handling.")
+        Component(openaiProvider, "OpenAIProvider", "Java component", "Calls the OpenAI-compatible Responses and Embeddings APIs and manages local tools and usage.")
+        Component(anthropicProvider, "AnthropicProvider", "Java component", "Calls the Anthropic Messages API and manages local tool-use execution.")
+        Component(codeMieProvider, "CodeMieProvider", "Java component", "Obtains an OIDC token and delegates compatible models through the provider adapter.")
+        Component(toolsProvider, "ToolsProvider", "Java component", "Executes a registered local tool from a YAML tool-call description.")
+        Component(noneProvider, "NoneProvider", "Java component", "No-op provider for disabled processing and tests.")
     }
 
     Boundary(capabilityRegistration, "Capability Registration") {
-        Component(toolsLoader, "FunctionToolsLoader", "Java component", "Discovers FunctionTools through ServiceLoader, filters supported applications, and registers tools, prompts, and resources.")
-        Component(functionTools, "FunctionTools SPI and annotations", "Java extension point", "Host implementations and annotations declaring executable tools, prompts, resources, parameters, roles, and application support.")
-        Component(typeConverter, "TypeConverter", "Java utility", "Maps Java parameter types to provider schemas and converts JSON or YAML arguments to Java values.")
+        Component(toolsLoader, "FunctionToolsLoader", "Java component", "Discovers FunctionTools implementations with ServiceLoader, filters supported applications, and registers tools, prompts, and resources.")
+        Component(functionTools, "FunctionTools", "Java SPI", "Host extension point for local capabilities.")
+        Component(capabilityAnnotations, "Tool / Prompt / Resource annotations", "Java annotations", "Declares callable names, descriptions, parameters, roles, resources, and application support.")
+        Component(typeConverter, "TypeConverter", "Java utility", "Maps Java types to provider schemas and converts JSON or YAML arguments.")
         Component(toolLogger, "ToolLogger", "Java utility", "Logs local tool, prompt, and resource callback activity.")
     }
 
-    Boundary(providerSelection, "Provider Selection and Usage") {
+    Boundary(selectionAndUsage, "Provider Selection and Usage") {
         Component(providerManager, "ProcessProviderManager", "Java utility", "Resolves provider class names, reflectively instantiates and initializes providers, and selects embedding providers.")
-        Component(usage, "Usage and UsageStatistics", "Java model and utility", "Records and aggregates provider token usage by model.")
+        Component(usage, "Usage / UsageStatistics", "Java model and utility", "Captures and aggregates provider token usage by model.")
     }
 }
 
 Rel(hostApplication, configuration, "Supplies")
-Rel(hostApplication, providerManager, "Requests initialized provider", "Provider:Model")
-Rel(hostApplication, processProvider, "Sends prompts and executes")
+Rel(hostApplication, providerManager, "Requests provider", "Provider:Model")
+Rel(hostApplication, processProvider, "Sends instructions and prompts")
 Rel(hostApplication, embeddingProvider, "Requests embeddings")
 Rel(hostApplication, toolsLoader, "Provides application context")
 
@@ -78,10 +79,11 @@ Rel(codeMieProvider, embeddingProvider, "Implements")
 Rel(openaiProvider, embeddingProvider, "Implements")
 Rel(noneProvider, processProvider, "Implements")
 
-Rel(baseProvider, configuration, "Reads provider, web-search, and MCP settings")
-Rel(toolsLoader, functionTools, "Discovers compatible extensions", "ServiceLoader")
+Rel(baseProvider, configuration, "Reads provider, limits, web-search, and MCP settings")
+Rel(toolsLoader, functionTools, "Discovers implementations", "ServiceLoader")
 Rel(toolsLoader, processProvider, "Registers tools, prompts, and resources")
-Rel(baseProvider, functionTools, "Scans annotations and invokes callbacks")
+Rel(functionTools, capabilityAnnotations, "Uses")
+Rel(baseProvider, capabilityAnnotations, "Discovers annotated tools, prompts, and resources")
 Rel(baseProvider, typeConverter, "Builds schemas and converts arguments")
 Rel(baseProvider, toolLogger, "Logs callback activity")
 

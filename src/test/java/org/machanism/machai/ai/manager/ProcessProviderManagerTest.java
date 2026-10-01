@@ -119,7 +119,7 @@ class ProcessProviderManagerTest {
         ProcessProvider result = ProcessProviderManager.getProvider("None:log", configuration);
 
         // Assert
-        assertEquals("org.machanism.machai.process.provider.impl.NoneProvider", result.getClass().getName());
+        assertEquals("org.machanism.machai.process.provider.NoneProvider", result.getClass().getName());
         assertNull(result.perform());
     }
 
@@ -294,10 +294,10 @@ class ProcessProviderManagerTest {
         // Act
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> ProcessProviderManager.getEmbeddingProvider(
-                        "org.machanism.machai.process.provider.impl.NoneProvider:model", null));
+                        "org.machanism.machai.process.provider.NoneProvider:model", null));
 
         // Assert
-        assertEquals("Class `org.machanism.machai.process.provider.impl.NoneProvider` does not implement EmbeddingProvider. Please ensure the class is a valid provider implementation.",
+        assertEquals("Class `org.machanism.machai.process.provider.NoneProvider` does not implement EmbeddingProvider. Please ensure the class is a valid provider implementation.",
                 exception.getMessage());
     }
 

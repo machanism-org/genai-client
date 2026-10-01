@@ -8,10 +8,10 @@
     <H1>GenAI Client</H1>
     <P>
       GenAI Client is a Java library designed for seamless integration with Generative AI
-      providers. It offers provider-neutral prompt management, tool and resource integration,
-      and embedding capabilities for AI-powered features across Machai modules. The library
-      supports semantic search, automated content generation, and intelligent project assembly
-      within the Machanism ecosystem.
+      providers. It offers foundational prompt management and embedding capabilities, enabling
+      AI-powered features across Machai modules. The library simplifies interactions with AI
+      services, supporting advanced use cases such as semantic search, automated content
+      generation, and intelligent project assembly within the Machanism ecosystem.
     </P>
     <P>
       GenAI Client supports all types of project files, including source code, documentation,
@@ -33,7 +33,7 @@
       The implementation packages connect those contracts to backend SDKs and local workflows.
       OpenAI and Anthropic adapters translate requests, execute registered tools, support their
       backend-specific search and MCP features, and record response usage. CodeMie routes model
-      names to compatible backend adapters. The local implementations provide a disabled
+      names to compatible backend adapters. The process-provider package also provides a disabled
       provider and a deterministic YAML-driven tool provider.
     </P>
     <P>
@@ -46,7 +46,7 @@
 
     <P>
       <IMG SRC="../images/class-diagram.png"
-           ALT="Class diagram showing ProcessProvider and EmbeddingProvider contracts, AbstractAIProvider and GenaiAdapter shared infrastructure, concrete provider implementations, ProcessProviderManager, usage types, and annotated function-tool types."
+           ALT="Class diagram showing ProcessProvider and EmbeddingProvider contracts, AbstractAIProvider shared infrastructure, concrete provider implementations, ProcessProviderManager, usage types, and annotated function-tool types."
            style="max-width: 100%; height: auto;">
     </P>
     <P>
@@ -68,23 +68,18 @@
         infrastructure, delegation, type conversion, reflective capability registration, and
         logging for prompts, tools, resources, web search, and MCP configuration.
       </dd>
-      <dt><A HREF="org/machanism/machai/process/provider/impl/package-summary.html">org.machanism.machai.process.provider.impl</A></dt>
-      <dd>
-        Supplies the no-operation provider and the deterministic YAML-driven tool provider,
-        including local function registration, invocation, serialization, and configurable
-        tool-error behavior.
-      </dd>
       <dt><A HREF="org/machanism/machai/process/tools/package-summary.html">org.machanism.machai.process.tools</A></dt>
       <dd>
         Provides runtime annotations and metadata for declaring Java tools, prompts, resources,
         and parameters, together with service-based discovery, compatibility filtering,
         callable-tool contracts, roles, and structured error types.
       </dd>
-      <dt><A HREF="org/machanism/machai/ai/provider/impl/package-summary.html">org.machanism.machai.ai.provider.impl</A></dt>
+      <dt><A HREF="org/machanism/machai/genai/provider/package-summary.html">org.machanism.machai.genai.provider</A></dt>
       <dd>
         Implements OpenAI and Anthropic integrations, CodeMie authentication and model-prefix
         routing, backend-specific request translation, web search and MCP support, embeddings,
-        and response-usage accounting.
+        and response-usage accounting. These adapters connect provider contracts to remote model
+        APIs, resolve model-issued tool calls, and retain conversation state until cleared.
       </dd>
     </dl>
 

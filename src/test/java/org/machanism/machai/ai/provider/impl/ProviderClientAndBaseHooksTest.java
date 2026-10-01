@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 import org.machanism.machai.TestConfigurators;
+import org.machanism.machai.genai.provider.AnthropicProvider;
+import org.machanism.machai.genai.provider.OpenAIProvider;
 import org.machanism.machai.process.provider.AbstractAIProvider;
 import org.machanism.machai.process.tools.ParamDescriptor;
 import org.machanism.machai.process.tools.ToolFunction;
@@ -25,7 +27,7 @@ class ProviderClientAndBaseHooksTest {
         provider.init("gpt-test", config);
 
         // Act / Assert
-        assertDoesNotThrow(provider::getClient);
+        assertDoesNotThrow(() -> provider.getClient());
         assertEquals(2L, provider.getTimeout());
     }
 
@@ -36,17 +38,17 @@ class ProviderClientAndBaseHooksTest {
         apiKeyConfig.put(AnthropicProvider.ANTHROPIC_API_KEY, "sk-test-key");
         apiKeyConfig.put(AnthropicProvider.ANTHROPIC_BASE_URL, "http://localhost:8081");
         apiKeyConfig.put("GENAI_TIMEOUT", "1");
-        AnthropicProvider apiKeyProvider = new AnthropicProvider();
+        ExposedAnthropicProvider apiKeyProvider = new ExposedAnthropicProvider();
         apiKeyProvider.init("claude-test", apiKeyConfig);
 
         TestConfigurators.MapBackedConfigurator tokenConfig = TestConfigurators.mapBacked();
         tokenConfig.put(AnthropicProvider.ANTHROPIC_API_KEY, "bearer-token");
-        AnthropicProvider tokenProvider = new AnthropicProvider();
+        ExposedAnthropicProvider tokenProvider = new ExposedAnthropicProvider();
         tokenProvider.init("claude-test", tokenConfig);
 
         // Act / Assert
-        assertDoesNotThrow(apiKeyProvider::getClient);
-        assertDoesNotThrow(tokenProvider::getClient);
+        assertDoesNotThrow(() -> apiKeyProvider.getClient());
+        assertDoesNotThrow(() -> tokenProvider.getClient());
     }
 
     @Test
@@ -70,6 +72,13 @@ class ProviderClientAndBaseHooksTest {
         assertEquals(5L, provider.getTimeout());
         assertFalse(provider.isErrorHandling());
         assertTrue(provider.getProjectDir().isDirectory());
+    }
+
+    private static final class ExposedAnthropicProvider extends AnthropicProvider {
+        @Override
+        public com.anthropic.client.AnthropicClient getClient() {
+            return super.getClient();
+        }
     }
 
     private static final class HookProvider extends AbstractAIProvider {

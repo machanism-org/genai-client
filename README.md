@@ -28,6 +28,8 @@ Concrete provider components integrate OpenAI-compatible Responses and Embedding
 
 A metadata and service-loading layer discovers compatible Java tools, prompts, and resources, builds parameter schemas, and registers callbacks with providers. Usage components capture and aggregate token consumption by model. Optional MCP servers are registered or forwarded to the OpenAI and Anthropic integrations.
 
+The principal library areas resolve provider identifiers and usage, define the shared provider contracts and reusable AI-provider behavior, implement the concrete providers, and expose the service-loading and metadata contracts used to register Java capabilities.
+
 ## Introduction
 
 Applications follow the same lifecycle regardless of provider: resolve a configured provider with `ProcessProviderManager`, attach prompts or system instructions, register tools and resources as needed, then execute the request. Java methods exposed through the function-tool metadata can be discovered with `ServiceLoader` and made available as AI-callable functions or resource callbacks.

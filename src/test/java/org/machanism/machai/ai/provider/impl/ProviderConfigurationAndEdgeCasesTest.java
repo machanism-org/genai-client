@@ -9,6 +9,9 @@ import java.lang.reflect.Field;
 
 import org.junit.jupiter.api.Test;
 import org.machanism.machai.TestConfigurators;
+import org.machanism.machai.genai.provider.AnthropicProvider;
+import org.machanism.machai.genai.provider.CodeMieProvider;
+import org.machanism.machai.genai.provider.OpenAIProvider;
 import org.machanism.machai.process.provider.AbstractAIProvider;
 import org.machanism.machai.process.tools.ParamDescriptor;
 
@@ -18,6 +21,25 @@ import com.openai.models.responses.Tool;
 class ProviderConfigurationAndEdgeCasesTest {
 
     private static final class ExposedOpenAIProvider extends OpenAIProvider {
+        int inputCount() { return getInputs().size(); }
+        boolean hasInputs() { return !getInputs().isEmpty(); }
+        int toolCount() { return getToolMap().size(); }
+        java.util.Set<Tool> tools() { return getToolMap().keySet(); }
+        private java.util.List<?> getInputs() {
+            return (java.util.List<?>) field("inputs");
+        }
+        private java.util.Map<Tool, ?> getToolMap() {
+            return (java.util.Map<Tool, ?>) field("toolMap");
+        }
+        private Object field(String name) {
+            try {
+                Field f = OpenAIProvider.class.getDeclaredField(name);
+                f.setAccessible(true);
+                return f.get(this);
+            } catch (ReflectiveOperationException e) {
+                throw new AssertionError(e);
+            }
+        }
         void registerTool(String name, ParamDescriptor... descriptors) {
             addTool(name, "description", (params, context) -> "ok", descriptors);
         }
@@ -44,15 +66,15 @@ class ProviderConfigurationAndEdgeCasesTest {
     @Test
     void openAiPromptAndClearMaintainConversationState() {
         // Arrange
-        OpenAIProvider provider = new OpenAIProvider();
+        ExposedOpenAIProvider provider = new ExposedOpenAIProvider();
 
         // Act
         provider.prompt("hello");
 
         // Assert
-        assertEquals(1, provider.inputs.size());
+        assertEquals(1, provider.inputCount());
         provider.clear();
-        assertTrue(provider.inputs.isEmpty());
+        assertTrue(!provider.hasInputs());
     }
 
     @Test
@@ -68,10 +90,10 @@ class ProviderConfigurationAndEdgeCasesTest {
         provider.registerTool("search", required, optional);
 
         // Assert
-        assertEquals(3, provider.toolMap.size());
-        assertTrue(provider.toolMap.keySet().stream().anyMatch(Tool::isFunction));
-        assertTrue(provider.toolMap.keySet().stream().anyMatch(Tool::isWebSearch));
-        assertTrue(provider.toolMap.keySet().stream().anyMatch(Tool::isMcp));
+        assertEquals(3, provider.toolCount());
+        assertTrue(provider.tools().stream().anyMatch(Tool::isFunction));
+        assertTrue(provider.tools().stream().anyMatch(Tool::isWebSearch));
+        assertTrue(provider.tools().stream().anyMatch(Tool::isMcp));
     }
 
     @Test

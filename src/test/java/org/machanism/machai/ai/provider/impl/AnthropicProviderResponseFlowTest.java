@@ -14,6 +14,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.machanism.machai.TestConfigurators;
+import org.machanism.machai.genai.provider.AnthropicProvider;
 import org.machanism.machai.process.manager.UsageStatistics;
 import org.machanism.machai.process.tools.ParamDescriptor;
 

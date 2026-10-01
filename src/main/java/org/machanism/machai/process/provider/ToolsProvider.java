@@ -1,11 +1,10 @@
-package org.machanism.machai.process.provider.impl;
+package org.machanism.machai.process.provider;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.machanism.machai.process.provider.AbstractAIProvider;
 import org.machanism.machai.process.tools.ParamDescriptor;
 import org.machanism.machai.process.tools.ToolFunction;
 import org.slf4j.Logger;
