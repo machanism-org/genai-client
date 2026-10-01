@@ -37,7 +37,7 @@ This separation improves maintainability and reuse. Tool logic stays in business
 
 ## Package: `org.machanism.machai.process.tools`
 
-The package `org.machanism.machai.process.tools` contains the host-side SPI, annotations, descriptors, and runtime contracts used to contribute functional tools. The requested `src/main/java/org/machanism/machai/ai/tools` directory is not present in this source tree; the functional-tools implementation is under `src/main/java/org/machanism/machai/process/tools`.
+The package `org.machanism.machai.process.tools` contains the host-side SPI, annotations, descriptors, and runtime contracts used to contribute functional tools. The requested `src/main/java/org/machanism/machai/ai/tools` directory is not present in this source tree; the functional-tools implementation is under `src/main/java/org/machanism/machai/process/tools`. The source inventory includes `ErrorResultException`, `FunctionTools`, `FunctionToolsLoader`, `Param`, `ParamDescriptor`, `Prompt`, `Resource`, `Role`, `SpecialException`, `SupportedFor`, `Tool`, `ToolExecutionException`, and `ToolFunction` (plus `package-info.java`).
 
 ### `FunctionTools`
 
@@ -295,7 +295,7 @@ public class ActSpecFunctionTools implements FunctionTools {
 }
 ```
 
-If the annotation is absent, the tool bundle is treated as compatible with all application classes.
+If the annotation is absent, the tool bundle is treated as compatible with all application classes. When `value` is empty, the annotation also permits all application classes; entries in `excludes` then remove matching classes. An excluded class takes precedence over an otherwise compatible `value` entry.
 
 ## How functional tools work
 
@@ -305,7 +305,7 @@ A typical lifecycle looks like this:
 2. Annotate public tool methods with `@Tool` and their exposed parameters with `@Param`.
 3. Optionally annotate reusable prompt methods with `@Prompt`.
 4. Register those classes with Java `ServiceLoader`.
-5. Create and initialize the AI provider.
+5. Create and initialize the AI provider. Initialization should happen before loading tools so provider configuration and project-directory context are available while schemas are built.
 6. Call `FunctionToolsLoader.applyTools(provider, tools, appClass)`, where `tools` is `null` to enable every annotated tool or an array of regular-expression filters.
 7. The loader applies each compatible implementation.
 8. The provider scans annotated methods and registers tools, prompts, and resources.
@@ -364,6 +364,12 @@ This means a custom tool method can combine model-supplied arguments with applic
 - MCP server tools.
 
 These are configured during provider initialization and stored in the provider tool map beside standard function tools.
+
+`OpenAIProvider.init(...)` uses the inherited initialization sequence: after storing the
+provider configuration, `AbstractAIProvider` reads the web-search settings and scans the
+sequential MCP groups, delegating each enabled definition to the OpenAI-specific methods
+described below. Register host-managed Java tools after provider initialization so their
+schemas are built with the intended project-directory and configuration context.
 
 ## Web Search
 

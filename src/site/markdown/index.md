@@ -25,7 +25,7 @@ Generate or update the content as follows.
 
 GenAI Client is a Java library designed for integrating Machai applications with generative AI providers through a consistent provider abstraction. It provides provider resolution, prompt and instruction handling, runtime configuration, optional embedding generation, usage tracking, and Java function-tool, prompt, and resource registration for AI-powered workflows.
 
-The library is organized around the common `Genai` lifecycle contract and shared provider infrastructure. Applications can resolve a configured provider from identifiers such as `OpenAI:gpt-4o-mini`, attach prompts, system instructions, tools, resources, web-search support, or MCP servers, and execute requests without depending directly on vendor-specific SDK details. Token usage is captured in immutable usage records and can be aggregated per model for reporting and diagnostics.
+The library is organized around the common `ProcessProvider` lifecycle contract and shared provider infrastructure. Applications can resolve a configured provider from identifiers such as `OpenAI:gpt-4o-mini`, attach prompts, system instructions, tools, resources, web-search support, or MCP servers, and execute requests without depending directly on vendor-specific SDK details. Token usage is captured in immutable usage records and can be aggregated per model for reporting and diagnostics.
 
 GenAI Client also includes a lightweight tool metadata layer. Java methods annotated as tools, prompts, or resources can be discovered through `ServiceLoader`, described with parameter metadata, filtered for supported application classes, and registered with providers as AI-callable functions or resource callbacks. This enables advanced use cases such as semantic search, automated content generation, intelligent project assembly, structured tool execution, local tool orchestration, and provider-independent prompt workflows.
 
@@ -42,7 +42,7 @@ The main package areas are:
 
 ### OpenAI
 
-The OpenAI provider adapts the Machai `Genai` API to the OpenAI Java SDK Responses API and Embeddings API. It supports conversational text generation, iterative function-tool calling, optional OpenAI web search, MCP server tools, embeddings, request input logging, and OpenAI usage conversion.
+The OpenAI provider adapts the Machai `ProcessProvider` and `EmbeddingProvider` APIs to the OpenAI Java SDK Responses API and Embeddings API. It supports conversational text generation, iterative function-tool calling, optional OpenAI web search, MCP server tools, embeddings, request input logging, and OpenAI usage conversion.
 
 Typical configuration includes an OpenAI API key, a chat or embedding model name, and optional values such as a custom OpenAI-compatible base URL, timeout, maximum output tokens, and tool-call limits. It can also be used with OpenAI-compatible endpoints by overriding the base URL.
 
@@ -50,7 +50,7 @@ Configure it with an identifier such as `OpenAI:gpt-4o-mini` or `OpenAI:text-emb
 
 ### Anthropic
 
-The Anthropic provider adapts the Machai `Genai` API to Anthropic Claude models through the Anthropic Java SDK Beta Messages API. It supports prompt execution, system instructions, custom function tools, automatic tool-use loops, optional web search, MCP server forwarding, prompt-cache control on the final registered tool, and token-usage capture.
+The Anthropic provider adapts the Machai `ProcessProvider` API to Anthropic Claude models through the Anthropic Java SDK Beta Messages API. It supports prompt execution, system instructions, custom function tools, automatic tool-use loops, optional web search, MCP server forwarding, prompt-cache control on the final registered tool, and token-usage capture.
 
 Typical configuration includes an Anthropic API key or authorization token, a Claude model identifier, and optional values such as a custom base URL, timeout, output-token limits, web-search settings, and MCP server definitions. When local function tools are registered, the provider applies Anthropic ephemeral prompt-cache control to the final registered tool.
 
@@ -80,7 +80,7 @@ Configure it with `None:log` for INFO-level lifecycle diagnostics, or with anoth
 
 | Parameter | Description | Default value |
 | --- | --- | --- |
-| Provider/model identifier | Model identifier used by the selected provider. `GenaiProviderManager` commonly resolves identifiers in the `Provider:Model` form, such as `OpenAI:gpt-4o-mini`; the provider itself receives the model portion. | Required |
+| Provider/model identifier | Model identifier used by the selected provider. `ProcessProviderManager` commonly resolves identifiers in the `Provider:Model` form, such as `OpenAI:gpt-4o-mini`; the provider itself receives the model portion. | Required |
 | `OPENAI_API_KEY` | API key for OpenAI or OpenAI-compatible endpoints. CodeMie sets this to the retrieved OAuth 2.0 bearer token for delegated OpenAI-compatible requests. | Required for OpenAI-compatible providers |
 | `OPENAI_BASE_URL` | Optional base URL override for OpenAI-compatible APIs. | OpenAI SDK default |
 | `ANTHROPIC_API_KEY` | API key or authorization token for Anthropic Claude requests. | Required for Anthropic |
@@ -93,7 +93,7 @@ Configure it with `None:log` for INFO-level lifecycle diagnostics, or with anoth
 | `WebSearchTool.country` | Optional country hint for web-search user location. | Not set |
 | `WebSearchTool.region` | Optional region hint for web-search user location. | Not set |
 | `MCP.url` | URL for the first MCP server tool. Additional servers can be configured with numbered groups such as `MCP_1.url`, `MCP_2.url`, and so on. | Not set |
-| `MCP.name` | Provider-visible MCP server name. Additional servers can use `MCP_1.name`, `MCP_2.name`, and so on. A name is required for a configured group to be registered. | Not set |
+| `MCP.name` | Provider-visible MCP server name (passed to OpenAI as its server label). Additional servers can use `MCP_1.name`, `MCP_2.name`, and so on. A name is required for a configured group to be registered. | Not set |
 | `MCP.authorization` | Optional authorization value for the MCP server. Additional servers can use numbered variants. | Not set |
 | `MCP.description` | Optional MCP server description. Additional servers can use numbered variants. | Not set |
 | `GENAI_USERNAME` | Generic username used by provider authentication flows. CodeMie can use it for password-grant authentication. | Provider-specific |

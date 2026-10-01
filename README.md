@@ -22,17 +22,15 @@ GenAI Client is a Java library for integrating Machai applications with generati
 
 ## Project Structure
 
-A host application requests a configured `Provider:Model` implementation from `GenaiProviderManager`, then uses the common `Genai` contract to submit prompts, register local capabilities, execute requests, and, where supported, generate embeddings. The manager initializes the selected provider; shared provider infrastructure handles configuration, local callback discovery and invocation, web-search and MCP setup, argument conversion, and error handling.
+A host application requests a configured `Provider:Model` implementation from `ProcessProviderManager`, then uses the common `ProcessProvider` contract to submit prompts, register local capabilities, execute requests, and, where supported, generate embeddings. The manager initializes the selected provider; shared provider infrastructure handles configuration, local callback discovery and invocation, web-search and MCP setup, argument conversion, and error handling.
 
 Concrete provider components integrate OpenAI-compatible Responses and Embeddings APIs, Anthropic Messages APIs, and CodeMie delegation. The CodeMie component obtains an OAuth 2.0 access token and routes supported model families to the appropriate compatible provider. Local YAML-described callbacks and a safe no-op provider support host-side execution and disabled environments without an external model request.
 
 A metadata and service-loading layer discovers compatible Java tools, prompts, and resources, builds parameter schemas, and registers callbacks with providers. Usage components capture and aggregate token consumption by model. Optional MCP servers are registered or forwarded to the OpenAI and Anthropic integrations.
 
-At the component level, a host application supplies configuration, resolves an initialized provider, and interacts through the common generation and embedding contracts. Shared provider behavior coordinates local capability discovery, callback argument conversion, web-search and MCP configuration, and error handling. OpenAI and Anthropic implementations call their respective external APIs, while CodeMie obtains an OAuth 2.0 token and configures a delegated compatible client. The project-structure illustration is omitted because no generated diagram image is available.
-
 ## Introduction
 
-Applications follow the same lifecycle regardless of provider: resolve a configured provider, attach prompts or system instructions, register tools and resources as needed, then execute the request. Java methods exposed through the function-tool metadata can be discovered with `ServiceLoader` and made available as AI-callable functions or resource callbacks.
+Applications follow the same lifecycle regardless of provider: resolve a configured provider with `ProcessProviderManager`, attach prompts or system instructions, register tools and resources as needed, then execute the request. Java methods exposed through the function-tool metadata can be discovered with `ServiceLoader` and made available as AI-callable functions or resource callbacks.
 
 This supports semantic search, automated content generation, intelligent project assembly, structured tool execution, local tool orchestration, and provider-independent prompt workflows. Token usage is captured in immutable records and can be aggregated by model for reporting and diagnostics.
 
@@ -65,7 +63,7 @@ The None provider is a disabled no-op implementation for safe defaults and tests
 Configure a provider with a `Provider:Model` identifier and the credentials appropriate to that provider. For example, configure OpenAI with `OpenAI:gpt-4o-mini` and `OPENAI_API_KEY`.
 
 ```java
-Genai genai = GenaiProviderManager.getGenai("OpenAI:gpt-4o-mini");
+ProcessProvider provider = ProcessProviderManager.getProvider("OpenAI:gpt-4o-mini", configurator);
 // Add prompts, instructions, tools, or resources as required, then execute the request.
 ```
 

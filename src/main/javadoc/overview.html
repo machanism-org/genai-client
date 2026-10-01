@@ -8,10 +8,10 @@
     <H1>GenAI Client</H1>
     <P>
       GenAI Client is a Java library designed for seamless integration with Generative AI
-      providers. It offers foundational prompt management and embedding capabilities,
-      enabling AI-powered features across Machai modules. The library simplifies
-      interactions with AI services, supporting semantic search, automated content
-      generation, and intelligent project assembly within the Machanism ecosystem.
+      providers. It offers provider-neutral prompt management, tool and resource integration,
+      and embedding capabilities for AI-powered features across Machai modules. The library
+      supports semantic search, automated content generation, and intelligent project assembly
+      within the Machanism ecosystem.
     </P>
     <P>
       GenAI Client supports all types of project files, including source code, documentation,
@@ -22,88 +22,82 @@
 
     <H2>Architecture</H2>
     <P>
-      The provider package defines provider-neutral generation and embedding contracts and
-      reusable infrastructure. It covers initialization and lifecycle behavior, instructions
-      and prompts, function tools, prompt and resource handlers, project-directory context,
-      type conversion, input logging, error handling, web search, MCP configuration, and
-      usage integration. Implementations translate these contracts to backend SDKs while
-      keeping vendor-specific configuration out of application code.
+      The provider package defines vendor-neutral contracts for conversational processing and
+      embeddings, together with reusable lifecycle, state, conversion, logging, and capability
+      registration infrastructure. Providers accept a model and configuration, collect
+      instructions and prompts, optionally register tools and resources, perform a request, and
+      can be cleared before an independent request. Implementations should be treated as
+      stateful and non-thread-safe unless they document otherwise.
     </P>
     <P>
-      The implementation packages provide OpenAI and Anthropic adapters, route CodeMie-
-      authenticated model requests to a compatible backend, execute local YAML-driven tools,
-      and supply a disabled provider. Providers retain request state until cleared, so a
-      reusable provider should be cleared before it is used for an unrelated conversation;
-      implementations are not assumed to be safe for concurrent request construction.
+      The implementation packages connect those contracts to backend SDKs and local workflows.
+      OpenAI and Anthropic adapters translate requests, execute registered tools, support their
+      backend-specific search and MCP features, and record response usage. CodeMie routes model
+      names to compatible backend adapters. The local implementations provide a disabled
+      provider and a deterministic YAML-driven tool provider.
     </P>
     <P>
       The manager package resolves chat and embedding providers from provider-and-model
-      identifiers and collects process-local input, cached-input, and output token-usage
-      records. The tools package supplies runtime annotations and metadata for tools, prompts,
-      resources, and parameters, together with service-based discovery, callable-tool
-      contracts, compatibility filtering, conversation roles, and structured exception types.
-      These relationships let host applications remain independent of vendor SDK details.
+      identifiers and records process-local input, cached-input, and output token usage. The
+      tools package supplies runtime annotations and metadata for tools, prompts, resources,
+      and parameters, along with service-based discovery, compatibility filtering, callable
+      callbacks, conversation roles, and structured exception types.
     </P>
-    <P>
-      A typical integration resolves or constructs a provider, initializes it with a model and
-      configuration, registers annotated function-tool objects, adds instructions or prompts,
-      and performs a request. Embedding providers expose vector generation for semantic and
-      similarity-based workflows.
-    </P>
+
     <P>
       <IMG SRC="../images/class-diagram.png"
            ALT="Class diagram showing ProcessProvider and EmbeddingProvider contracts, AbstractAIProvider and GenaiAdapter shared infrastructure, concrete provider implementations, ProcessProviderManager, usage types, and annotated function-tool types."
            style="max-width: 100%; height: auto;">
     </P>
     <P>
-      The class diagram shows the relationships among provider contracts, shared
-      infrastructure, manager, concrete backend adapters, usage records, and annotated
-      function-tool types.
+      The class diagram shows the relationships among provider contracts, shared infrastructure,
+      manager, concrete backend adapters, usage records, and annotated function-tool types.
     </P>
 
     <H2>Packages</H2>
-    <DL>
-      <DT><A HREF="org/machanism/machai/process/manager/package-summary.html">org.machanism.machai.process.manager</A></DT>
-      <DD>
+    <dl>
+      <dt><A HREF="org/machanism/machai/process/manager/package-summary.html">org.machanism.machai.process.manager</A></dt>
+      <dd>
         Resolves configured generative-AI and embedding providers from provider-and-model
-        identifiers and records usage by model identifier. Its central types are
+        identifiers and records process-local usage by model identifier. Its central types are
         ProcessProviderManager, Usage, and UsageStatistics.
-      </DD>
-      <DT><A HREF="org/machanism/machai/process/provider/package-summary.html">org.machanism.machai.process.provider</A></DT>
-      <DD>
-        Defines provider-neutral generation and embedding contracts, reusable stateful
-        provider behavior, delegation, type conversion, and logging for prompts, tools,
-        resources, web search, and MCP server configuration.
-      </DD>
-      <DT><A HREF="org/machanism/machai/process/provider/impl/package-summary.html">org.machanism.machai.process.provider.impl</A></DT>
-      <DD>
+      </dd>
+      <dt><A HREF="org/machanism/machai/process/provider/package-summary.html">org.machanism.machai.process.provider</A></dt>
+      <dd>
+        Defines provider-neutral generation and embedding contracts, stateful provider
+        infrastructure, delegation, type conversion, reflective capability registration, and
+        logging for prompts, tools, resources, web search, and MCP configuration.
+      </dd>
+      <dt><A HREF="org/machanism/machai/process/provider/impl/package-summary.html">org.machanism.machai.process.provider.impl</A></dt>
+      <dd>
         Supplies the no-operation provider and the deterministic YAML-driven tool provider,
-        including local function discovery, invocation, serialization, and configurable
+        including local function registration, invocation, serialization, and configurable
         tool-error behavior.
-      </DD>
-      <DT><A HREF="org/machanism/machai/process/tools/package-summary.html">org.machanism.machai.process.tools</A></DT>
-      <DD>
+      </dd>
+      <dt><A HREF="org/machanism/machai/process/tools/package-summary.html">org.machanism.machai.process.tools</A></dt>
+      <dd>
         Provides runtime annotations and metadata for declaring Java tools, prompts, resources,
-        and parameters, along with service-based discovery, compatibility filtering,
+        and parameters, together with service-based discovery, compatibility filtering,
         callable-tool contracts, roles, and structured error types.
-      </DD>
-      <DT><A HREF="org/machanism/machai/ai/provider/impl/package-summary.html">org.machanism.machai.ai.provider.impl</A></DT>
-      <DD>
+      </dd>
+      <dt><A HREF="org/machanism/machai/ai/provider/impl/package-summary.html">org.machanism.machai.ai.provider.impl</A></dt>
+      <dd>
         Implements OpenAI and Anthropic integrations, CodeMie authentication and model-prefix
         routing, backend-specific request translation, web search and MCP support, embeddings,
         and response-usage accounting.
-      </DD>
-    </DL>
+      </dd>
+    </dl>
 
     <H2>Using the API</H2>
     <P>
       Start with the provider and tools package summaries to select a provider contract and
-      declare application capabilities. Use the manager package when a provider must be
-      selected dynamically from configuration. Concrete provider documentation describes
-      backend-specific credentials, endpoints, model options, supported capabilities, and
-      request lifecycle details. Register function-tool implementations when a model or local
-      tool workflow needs access to project capabilities, and call the provider's clear
-      operation before beginning an independent request on a reused instance.
+      declare application capabilities. Use the manager package when a provider must be selected
+      dynamically from configuration. Concrete provider documentation describes backend-specific
+      credentials, endpoints, model options, supported capabilities, and request lifecycle
+      details. Register function-tool implementations when a model or local tool workflow needs
+      access to project capabilities, and call the provider's clear operation before beginning
+      an independent request on a reused instance. Use an EmbeddingProvider for vector
+      generation in semantic and similarity-based workflows.
     </P>
   </BODY>
 </HTML>
