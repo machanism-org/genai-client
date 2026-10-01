@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.Test;
+import org.machanism.machai.TestConfigurators;
 import org.machanism.machai.process.tools.ToolFunction;
 
 import com.anthropic.models.beta.messages.BetaToolUseBlock;

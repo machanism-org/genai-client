@@ -32,6 +32,8 @@ class ProcessProviderManagerTest {
         assertNull(result);
     }
 
+
+
     @Test
     void getEmbeddingProviderReturnsNullWhenProviderNameContainsOnlyWhitespace() {
         // Arrange
@@ -68,7 +70,7 @@ class ProcessProviderManagerTest {
     }
 
     @Test
-    void getProviderReturnsNullWhenProviderNameContainsOnlyWhitespace() {
+    void getProviderReturnsNullWhenProviderNameIsWhitespaceBeforeTheSeparator() {
         // Arrange
         Configurator configuration = null;
 
@@ -272,6 +274,20 @@ class ProcessProviderManagerTest {
     }
 
     @Test
+    void getEmbeddingProviderAllowsAProviderSpecificationWithoutAModelValue() {
+        // Arrange
+        String providerName = FullyQualifiedEmbeddingProvider.class.getName();
+
+        // Act
+        FullyQualifiedEmbeddingProvider result = (FullyQualifiedEmbeddingProvider)
+                ProcessProviderManager.getEmbeddingProvider(providerName, null);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("", result.model);
+    }
+
+    @Test
     void getEmbeddingProviderRejectsClassThatDoesNotImplementEmbeddingProvider() {
         // Arrange
 
@@ -317,13 +333,9 @@ class ProcessProviderManagerTest {
 
     /** Fixture used for reflective provider tests. */
     public static class FallbackProvider implements ProcessProvider {
-        private String model;
-        private Configurator configuration;
 
         @Override
         public void init(String model, Configurator conf) {
-            this.model = model;
-            this.configuration = conf;
         }
 
         @Override

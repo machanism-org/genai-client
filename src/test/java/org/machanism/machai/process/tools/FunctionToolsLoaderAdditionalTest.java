@@ -6,6 +6,12 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import java.lang.reflect.Field;
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -60,6 +66,42 @@ class FunctionToolsLoaderAdditionalTest {
 
         // Assert
         assertDoesNotThrow(() -> loader.applyTools(mock(ProcessProvider.class), null, Object.class));
+    }
+
+    @Test
+    void constructor_ignoresMalformedLegacyServiceDescriptor() throws Exception {
+        // Arrange
+        Path servicesDirectory = Files.createTempDirectory("function-tools-services");
+        Path descriptor = servicesDirectory.resolve(
+                "META-INF/services/org.machanism.machai.ai.tools.FunctionTools");
+        Files.createDirectories(descriptor.getParent());
+        Files.write(descriptor, "not.a.RealFunctionTools\n".getBytes(StandardCharsets.UTF_8));
+        ClassLoader previousLoader = Thread.currentThread().getContextClassLoader();
+
+        try (URLClassLoader contextLoader = new URLClassLoader(
+                new URL[] { servicesDirectory.toUri().toURL() }, previousLoader)) {
+            Thread.currentThread().setContextClassLoader(contextLoader);
+
+            // Act
+            FunctionToolsLoader loader = new FunctionToolsLoader();
+
+            // Assert
+            assertDoesNotThrow(() -> loader.applyTools(mock(ProcessProvider.class), null, Object.class));
+        } finally {
+            Thread.currentThread().setContextClassLoader(previousLoader);
+            deleteRecursively(servicesDirectory);
+        }
+    }
+
+    private static void deleteRecursively(Path path) throws IOException {
+        if (Files.isDirectory(path)) {
+            try (java.nio.file.DirectoryStream<Path> entries = Files.newDirectoryStream(path)) {
+                for (Path entry : entries) {
+                    deleteRecursively(entry);
+                }
+            }
+        }
+        Files.deleteIfExists(path);
     }
 
     @SuppressWarnings("unchecked")

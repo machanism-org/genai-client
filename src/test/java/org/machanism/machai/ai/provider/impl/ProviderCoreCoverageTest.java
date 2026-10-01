@@ -5,15 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Method;
-import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
+import org.machanism.machai.TestConfigurators;
 import org.machanism.machai.process.tools.ParamDescriptor;
 
 import com.anthropic.models.beta.messages.BetaMessageParam;
 import com.anthropic.models.beta.messages.MessageCreateParams;
-import com.openai.models.responses.ResponseCreateParams;
-import com.openai.models.responses.ResponseUsage;
 
 /** Focused coverage of provider request construction and local state. */
 class ProviderCoreCoverageTest {
@@ -38,11 +36,13 @@ class ProviderCoreCoverageTest {
 		p.prompt(" ");
 		p.prompt("question");
 		p.register("lookup", new ParamDescriptor("q", "string", true, "query", null));
+		p.register("lookup", new ParamDescriptor("ignored", "string", false, "duplicate", null));
 		MessageCreateParams request = p.request();
 		assertTrue(request.model().toString().contains("claude-test"));
 		assertTrue(request.system().get().toString().contains("system"));
 		assertEquals(1, request.messages().size());
 		assertEquals(1, request.tools().get().size());
+		assertEquals(java.util.Collections.singletonList("lookup"), p.getToolNames());
 		p.clear();
 		assertTrue(p.inputs().isEmpty());
 	}
@@ -52,30 +52,6 @@ class ProviderCoreCoverageTest {
 		CodeMieProvider p = new CodeMieProvider();
 		assertThrows(IllegalArgumentException.class, () -> p.init("unsupported", TestConfigurators.mapBacked()));
 		assertThrows(NullPointerException.class, () -> p.embedding(null, 3));
-	}
-
-	private static final class ExposedOpenAI extends OpenAIProvider {
-		void register(String name, ParamDescriptor... d) {
-			addTool(name, "tool", (params, context) -> "ok", d);
-		}
-
-		void register(String name) {
-			register(name, new ParamDescriptor[0]);
-		}
-
-		ResponseCreateParams request() throws Exception {
-			return build(inputs);
-		}
-
-		ResponseCreateParams build(java.util.List<?> values) throws Exception {
-			Method m = OpenAIProvider.class.getDeclaredMethod("createResponseBuilder", java.util.List.class);
-			m.setAccessible(true);
-			return (ResponseCreateParams) m.invoke(this, values);
-		}
-
-		void capture(Optional<ResponseUsage> usage) {
-			captureUsage(usage);
-		}
 	}
 
 	private static final class ExposedAnthropic extends AnthropicProvider {

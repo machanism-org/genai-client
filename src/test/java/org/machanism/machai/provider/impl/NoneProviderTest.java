@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import java.io.File;
 
 import org.junit.jupiter.api.Test;
+import org.machanism.machai.TestConfigurators;
 import org.machanism.machai.process.provider.impl.NoneProvider;
 
 /** Unit tests for the deliberately inert provider. */

@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
+import org.machanism.machai.TestConfigurators;
 import org.machanism.machai.process.manager.UsageStatistics;
 import org.machanism.machai.process.tools.ParamDescriptor;
 
@@ -20,6 +21,7 @@ import com.anthropic.client.AnthropicClient;
 import com.anthropic.models.beta.messages.BetaContentBlock;
 import com.anthropic.models.beta.messages.BetaMessage;
 import com.anthropic.models.beta.messages.BetaTextBlock;
+import com.anthropic.models.beta.messages.BetaToolUseBlock;
 import com.anthropic.models.beta.messages.BetaUsage;
 import com.anthropic.models.beta.messages.MessageCreateParams;
 
@@ -117,6 +119,37 @@ class AnthropicProviderResponseFlowTest {
 		assertEquals(1, request.messages().size());
 		assertEquals(1, request.tools().get().size());
 		assertEquals(1, request.mcpServers().get().size());
+	}
+
+	@Test
+	void performExecutesMatchingToolAndContinuesWithToolResult() {
+		// Arrange
+		UsageStatistics.init();
+		AnthropicClient client = mock(AnthropicClient.class, RETURNS_DEEP_STUBS);
+		BetaToolUseBlock toolUse = mock(BetaToolUseBlock.class);
+		when(toolUse.id()).thenReturn("tool-use-1");
+		when(toolUse.name()).thenReturn("lookup");
+		when(toolUse.toParam()).thenReturn(mock(com.anthropic.models.beta.messages.BetaToolUseBlockParam.class));
+		BetaContentBlock toolContent = mock(BetaContentBlock.class);
+		when(toolContent.isToolUse()).thenReturn(true);
+		when(toolContent.asToolUse()).thenReturn(toolUse);
+		BetaMessage toolResponse = mock(BetaMessage.class);
+		when(toolResponse.content()).thenReturn(Collections.singletonList(toolContent));
+		when(toolResponse.isValid()).thenReturn(false);
+		BetaMessage finalResponse = textResponse("tool answer", 1L, 0L, 0L, 1L);
+		when(client.beta().messages().create(any(MessageCreateParams.class))).thenReturn(toolResponse, finalResponse);
+		StubAnthropicProvider provider = new StubAnthropicProvider(client);
+		provider.init("claude-tools", TestConfigurators.mapBacked());
+		provider.registerTool("lookup");
+		provider.prompt("find it");
+
+		// Act
+		String result = provider.perform();
+
+		// Assert
+		assertEquals("tool answer", result);
+		assertEquals(4, provider.inputCount());
+		verify(client.beta().messages(), times(2)).create(any(MessageCreateParams.class));
 	}
 
 	private static BetaMessage textResponse(String text, long input, long created, long read, long output) {

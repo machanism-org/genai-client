@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 
 import org.junit.jupiter.api.Test;
+import org.machanism.machai.TestConfigurators;
 import org.machanism.machai.process.provider.ProcessProvider;
 import org.machanism.machai.process.provider.ProcessProviderAdapter;
 

@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.lang.reflect.Field;
 
 import org.junit.jupiter.api.Test;
+import org.machanism.machai.TestConfigurators;
 import org.machanism.machai.process.provider.AbstractAIProvider;
 import org.machanism.machai.process.tools.ParamDescriptor;
 
@@ -85,6 +86,7 @@ class ProviderConfigurationAndEdgeCasesTest {
         provider.registerWebSearch("20250305", null, "FR", null);
         provider.registerMcp("docs", "https://example.test/mcp", null, null);
         provider.registerTool("lookup", new ParamDescriptor("q", "string", true, "query", null));
+		assertEquals(java.util.Collections.singletonList("lookup"), provider.getToolNames());
     }
 
     @Test
@@ -118,7 +120,7 @@ class ProviderConfigurationAndEdgeCasesTest {
 
         // Act
         provider.instructions("system");
-        provider.setTimeout(12, provider);
+        provider.setTimeout(12);
 
         // Assert
         assertEquals(12, provider.getTimeout());

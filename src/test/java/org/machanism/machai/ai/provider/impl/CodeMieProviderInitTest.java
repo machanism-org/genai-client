@@ -3,6 +3,7 @@ package org.machanism.machai.ai.provider.impl;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
+import org.machanism.machai.TestConfigurators;
 
 class CodeMieProviderInitTest {
 

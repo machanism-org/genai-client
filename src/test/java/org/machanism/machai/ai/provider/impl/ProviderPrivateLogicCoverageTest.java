@@ -2,6 +2,8 @@ package org.machanism.machai.ai.provider.impl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -13,6 +15,30 @@ import com.openai.models.responses.ResponseReasoningItem;
 
 /** Covers isolated response helper edge cases without network calls. */
 class ProviderPrivateLogicCoverageTest {
+
+    @Test
+    void openAiConfigurationSettersAndPromptStateAreObservable() {
+        // Arrange
+        OpenAIProvider provider = new OpenAIProvider();
+
+        // Act
+        provider.setProjectDir(new java.io.File("project"));
+        provider.setErrorHandling(true);
+        provider.setMaxOutputTokens(77L);
+        provider.setMaxToolCalls(4L);
+        provider.instructions("system");
+        provider.prompt("hello");
+
+        // Assert
+        assertEquals("project", provider.getProjectDir().getPath());
+        assertTrue(provider.isErrorHandling());
+        assertEquals(77L, provider.getMaxOutputTokens());
+        assertEquals(4L, provider.getMaxToolCalls());
+        assertEquals("system", provider.getInstructions());
+        assertFalse(provider.inputs.isEmpty());
+        provider.clear();
+        assertTrue(provider.inputs.isEmpty());
+    }
 
     @Test
     void firstNonBlankReasoningReturnsFirstUsefulFragmentOrNull() throws Exception {

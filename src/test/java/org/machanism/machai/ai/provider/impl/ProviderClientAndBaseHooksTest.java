@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
+import org.machanism.machai.TestConfigurators;
 import org.machanism.machai.process.provider.AbstractAIProvider;
 import org.machanism.machai.process.tools.ParamDescriptor;
 import org.machanism.machai.process.tools.ToolFunction;
@@ -60,7 +61,7 @@ class ProviderClientAndBaseHooksTest {
         provider.clear();
         provider.instructions("system");
         provider.setProjectDir(new java.io.File("."));
-        provider.setTimeout(5L, null);
+        provider.setTimeout(5L);
         provider.setErrorHandling(false);
 
         // Assert

@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
+import org.machanism.machai.TestConfigurators;
 
 import com.openai.client.OpenAIClient;
 import com.openai.models.responses.Response;
