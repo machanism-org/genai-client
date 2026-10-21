@@ -862,8 +862,8 @@ public abstract class AbstractAIProvider implements ProcessProvider {
 	 * Configures how runtime tool errors are handled by the invocation logic.
 	 * <p>
 	 * Use this setter to toggle between conversational error recovery and strict,
-	 * fail-fast exception reporting.
-	 * </p>
+	 * fail-fast exception repor\ting.
+	 * </p>\
 	 * <h4>Behavior Summary:</h4>
 	 * <ul>
 	 * <li>{@code setErrorHandling(true)} (Default): Captures all standard runtime
