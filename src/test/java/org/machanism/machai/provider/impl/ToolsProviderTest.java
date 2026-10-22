@@ -31,6 +31,15 @@ class ToolsProviderTest {
     }
 
     @Test
+    void failsClearlyWhenYamlModelHasNoPrompt() {
+        // Arrange
+        ToolsProvider provider = initialized("yaml");
+
+        // Act and assert
+        assertThrows(IndexOutOfBoundsException.class, provider::perform);
+    }
+
+    @Test
     void invokesRegisteredToolAndSerializesNonStringResult() {
         ToolsProvider provider = initialized("yaml");
         provider.addTools(new LocalTools(), null);
@@ -59,6 +68,21 @@ class ToolsProviderTest {
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, provider::perform);
         assertEquals("Functional tool: `absent` not found.", exception.getMessage());
+    }
+
+    @Test
+    void preservesToolRegistrationOrderInToolNames() {
+        // Arrange
+        ToolsProvider provider = initialized("yaml");
+        provider.addTools(new LocalTools(), null);
+
+        // Act
+        java.util.List<String> names = provider.getToolNames();
+
+        // Assert
+        assertEquals(3, names.size());
+        org.junit.jupiter.api.Assertions.assertTrue(names.containsAll(
+                java.util.Arrays.asList("echo", "details", "fail")));
     }
 
     @Test

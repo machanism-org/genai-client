@@ -2,7 +2,6 @@ package org.machanism.machai.process.provider;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -18,7 +17,6 @@ import org.machanism.macha.core.commons.configurator.Configurator;
 import org.machanism.machai.process.tools.ToolFunction;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /** Focused tests for provider state, configuration hooks, and utility branches. */
 class AbstractAIProviderCoverageTest {

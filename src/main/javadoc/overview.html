@@ -30,6 +30,14 @@
       stateful and non-thread-safe unless they document otherwise.
     </P>
     <P>
+      The contracts deliberately separate conversational processing from vector generation.
+      ProcessProviderAdapter supports delegation for concerns such as logging and retries, while
+      AbstractAIProvider supplies shared configuration, project-directory context, reflective
+      registration, tool-error handling, and backend capability hooks. NoneProvider is the
+      intentional no-op implementation; ToolsProvider provides a deterministic local dispatcher
+      that can interpret a YAML tool request and invoke a registered function.
+    </P>
+    <P>
       The implementation packages connect those contracts to backend SDKs and local workflows.
       OpenAI and Anthropic adapters translate requests, execute registered tools, support their
       backend-specific search and MCP features, and record response usage. CodeMie routes model
@@ -41,7 +49,10 @@
       identifiers and records process-local input, cached-input, and output token usage. The
       tools package supplies runtime annotations and metadata for tools, prompts, resources,
       and parameters, along with service-based discovery, compatibility filtering, callable
-      callbacks, conversation roles, and structured exception types.
+      callbacks, conversation roles, and structured exception types. FunctionToolsLoader discovers
+      capability bundles through the service-provider mechanism, SupportedFor filters them for an
+      application class, and the tool exception types distinguish structured results, execution
+      failures, and intentional task completion.
     </P>
 
     <P>

@@ -27,7 +27,11 @@ GenAI Client is a Java library designed for integrating Machai applications with
 
 The library is organized around the common `ProcessProvider` lifecycle contract and shared provider infrastructure. Applications can resolve a configured provider from identifiers such as `OpenAI:gpt-4o-mini`, attach prompts, system instructions, tools, resources, web-search support, or MCP servers, and execute requests without depending directly on vendor-specific SDK details. Token usage is captured in immutable usage records and can be aggregated per model for reporting and diagnostics.
 
+`ProcessProviderManager` resolves `Provider:Model` identifiers by reflection, initializes public no-argument provider implementations with a `Configurator`, and separately resolves embedding providers. `Usage` records input, cached-input, and output token counts, while `UsageStatistics` keeps in-memory records keyed by the exact model identifier and exposes model-specific or aggregate reporting. Provider instances retain their conversation and registration state until `clear()` is called and should not be shared concurrently without external synchronization.
+
 GenAI Client also includes a lightweight tool metadata layer. Java methods annotated as tools, prompts, or resources can be discovered through `ServiceLoader`, described with parameter metadata, filtered for supported application classes, and registered with providers as AI-callable functions or resource callbacks. This enables advanced use cases such as semantic search, automated content generation, intelligent project assembly, structured tool execution, local tool orchestration, and provider-independent prompt workflows.
+
+The `org.machanism.machai.process.tools` package also provides provider-neutral callback and failure contracts. `ToolFunction` supports programmatic JSON-based invocation, `ParamDescriptor` represents programmatic parameter metadata, and `ErrorResultException`, `ToolExecutionException`, and `SpecialException` distinguish structured results, checked tool failures, and intentional task completion. Service descriptors are loaded in discovery order; `SupportedFor` can restrict a capability bundle to application classes and its exclusions can veto an otherwise compatible match.
 
 ![GenAI Client structure](./images/c4-diagram.png)
 
@@ -48,6 +52,8 @@ Typical configuration includes an OpenAI API key, a chat or embedding model name
 
 Configure it with an identifier such as `OpenAI:gpt-4o-mini` or `OpenAI:text-embedding-3-small`, `OPENAI_API_KEY`, and, for a compatible gateway, `OPENAI_BASE_URL`. `GENAI_TIMEOUT`, `MAX_OUTPUT_TOKENS`, `MAX_TOOL_CALLS`, `WebSearchTool.*`, and `MCP*` settings are optional.
 
+`WebSearchTool.type` is provider-specific: OpenAI uses its supported search tool type, while Anthropic accepts `default`, `20260209`, or `20250305`. MCP groups are read as `MCP.*`, then sequentially as `MCP_1.*`, `MCP_2.*`, and so on; a group is registered when its name is present.
+
 ### Anthropic
 
 The Anthropic provider adapts the Machai `ProcessProvider` API to Anthropic Claude models through the Anthropic Java SDK Beta Messages API. It supports prompt execution, system instructions, custom function tools, automatic tool-use loops, optional web search, MCP server forwarding, prompt-cache control on the final registered tool, and token-usage capture.
@@ -56,11 +62,15 @@ Typical configuration includes an Anthropic API key or authorization token, a Cl
 
 Configure it with an identifier such as `Anthropic:claude-3-5-sonnet`, `ANTHROPIC_API_KEY`, and optionally `ANTHROPIC_BASE_URL`, `GENAI_TIMEOUT`, `MAX_OUTPUT_TOKENS`, `WebSearchTool.*`, and `MCP*` settings. `MAX_TOOL_CALLS` is an OpenAI Responses API setting and does not limit Anthropic tool-use loops.
 
+Anthropic treats a key beginning with `sk-` as an API key and other non-null credentials as authorization tokens. Local tools are sent in registration order; the final local tool receives ephemeral cache-control metadata when tools are present.
+
 ### CodeMie
 
 The CodeMie provider integrates with EPAM CodeMie Code Assistant endpoints. It authenticates with a CodeMie OpenID Connect token endpoint, obtains OAuth 2.0 bearer tokens, configures the delegated AI provider with the CodeMie API base URL, and routes supported model families to the appropriate implementation.
 
 Models beginning with `gpt-`, `gemini-`, `text-embedding-`, `codemie-text-embedding-`, or `amazon.titan-embed-text-` are delegated to the OpenAI provider configured for CodeMie endpoints. Models beginning with `claude-` are delegated to the Anthropic provider. The provider supports password-grant and client-credentials authentication flows based on `GENAI_USERNAME` and `GENAI_PASSWORD`, with an optional `AUTH_URL` token-endpoint override.
+
+Blank model names are also routed to the OpenAI-compatible implementation. Unsupported model prefixes fail during initialization. For OpenAI-compatible delegation, CodeMie sets `OPENAI_BASE_URL` to its Code Assistant API and refreshes the bearer token when the client is created; for Claude delegation it sets the corresponding Anthropic base URL and refreshes the Anthropic authorization token.
 
 Use an identifier such as `CodeMie:gpt-4o-mini` or `CodeMie:claude-3-5-sonnet` together with `GENAI_USERNAME` and `GENAI_PASSWORD`. A username containing `@` selects the password grant; any other username selects the client-credentials grant. CodeMie supplies the delegated provider's base URL and bearer token, so callers do not configure `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` directly.
 
@@ -69,6 +79,8 @@ Use an identifier such as `CodeMie:gpt-4o-mini` or `CodeMie:claude-3-5-sonnet` t
 The Tools provider exposes registered application functions for structured invocation. It collects prompts, registers `ToolFunction` callbacks, and executes those callbacks from YAML-based tool-call descriptions containing a tool name and parameter payload. This provider is useful for internal orchestration when host-defined tools need to be invoked through the same lifecycle as other AI providers without sending the request to an external model service.
 
 Configure it with the `Tools:yaml` identifier. Register the local callbacks before calling `perform()` and supply the final prompt as the YAML tool-call descriptor; no external credentials or endpoint settings are used.
+
+The descriptor must contain a `tool` name and may contain `params`. The provider invokes the matching registered function, serializes non-string results as JSON, preserves tool registration order, and uses fail-fast error handling. At least one prompt and a matching tool are required for a YAML execution.
 
 ### None provider
 

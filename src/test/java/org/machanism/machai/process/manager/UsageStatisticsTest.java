@@ -1,4 +1,4 @@
-package org.machanism.machai.ai.manager;
+package org.machanism.machai.process.manager;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -13,8 +13,6 @@ import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.machanism.machai.process.manager.Usage;
-import org.machanism.machai.process.manager.UsageStatistics;
 
 class UsageStatisticsTest {
 

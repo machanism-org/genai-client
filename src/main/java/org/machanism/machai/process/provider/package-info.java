@@ -1,18 +1,18 @@
 /* @guidance: >>> ${guidances}/package-info-javadoc.md */
 
 /**
- * Provider contracts, reusable lifecycle infrastructure, and local dispatch
- * implementations for Machai process integrations.
+ * Provider contracts, reusable lifecycle infrastructure, diagnostic utilities,
+ * and local dispatch implementations for Machai process integrations.
  *
  * <p>
  * The package separates provider-facing orchestration from provider-specific
  * transport code. {@link ProcessProvider} defines the common lifecycle for
  * initialization, instructions, prompts, tool and resource registration,
- * execution, project-directory context, error handling, and state clearing.
- * Implementations may retain conversation or request state between calls, so a
- * caller should use {@link ProcessProvider#clear()} when beginning an
- * independent request and should not assume that every implementation has the
- * same execution semantics.
+ * execution, project-directory context, error handling, tool-name inspection,
+ * and state clearing. Implementations may retain conversation or request state
+ * between calls, so a caller should use {@link ProcessProvider#clear()} when
+ * beginning an independent request and should not assume that every
+ * implementation has the same execution semantics.
  * </p>
  *
  * <h2>Provider contracts and decorators</h2>
@@ -26,7 +26,8 @@
  * {@link ProcessProviderAdapter} is a delegating implementation useful for
  * decorating a provider with application-level concerns such as logging,
  * metrics, retries, or request shaping. Set its delegate before forwarding
- * lifecycle calls.
+ * lifecycle calls; calling an adapter method before a delegate is configured
+ * results in a {@link NullPointerException}.
  * </li>
  * <li>
  * {@link AbstractAIProvider} supplies shared state and reflection-based
@@ -46,7 +47,8 @@
  * input without retaining or processing it, returns {@code null} from
  * {@link NoneProvider#perform()}, and always reports an immutable empty tool
  * list. Initializing it with model {@code "log"} enables diagnostic INFO
- * messages; other model values disable those messages.
+ * messages for supported lifecycle calls; other model values disable those
+ * messages. Prompt and resource registration remain silent.
  * </li>
  * <li>
  * {@link ToolsProvider} is a lightweight local dispatcher. It stores prompts,
@@ -54,7 +56,9 @@
  * model {@code "yaml"}, parses the most recently submitted prompt as a YAML
  * mapping. The mapping must contain a {@code tool} name and may contain
  * {@code params}; the named function is invoked, with non-string results
- * serialized as JSON. A YAML execution requires at least one prompt. Register
+ * serialized as JSON. A YAML execution requires at least one prompt and a
+ * registered tool with the requested name. This provider is configured for
+ * fail-fast tool errors rather than conversational error recovery. Register
  * annotated functions through
  * {@link ProcessProvider#addTools(org.machanism.machai.process.tools.FunctionTools,
  * String[])} rather than calling the protected registration hook directly.
@@ -67,7 +71,9 @@
  * abbreviating payloads at INFO level and retaining complete payloads at DEBUG
  * level. {@link TypeConverter} converts reflected tool parameters from string
  * or JSON representations and maps Java parameter types to simplified schema
- * type names. These utilities support the provider infrastructure and are not
+ * type names. {@link EmbeddingProvider} supplies the separate contract for
+ * generating embedding vectors rather than conversational responses. These
+ * utilities and contracts support provider infrastructure; they are not
  * provider-selection mechanisms.
  * </p>
  *

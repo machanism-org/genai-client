@@ -32,10 +32,10 @@ System_Boundary(genaiClient, "Machai GenAI Client Library") {
     }
 
     Boundary(providerImplementations, "Provider Implementations") {
-        Component(baseProvider, "AbstractAIProvider", "Java abstract class", "Shared configuration, web-search and MCP bootstrap, reflection-based capability registration, argument conversion, callbacks, and error handling.")
+        Component(baseProvider, "AbstractAIProvider", "Java abstract class", "Shared provider lifecycle, configuration, web-search and MCP bootstrap, reflective capability registration, argument conversion, callbacks, and error handling.")
         Component(openaiProvider, "OpenAIProvider", "Java component", "Calls the OpenAI-compatible Responses and Embeddings APIs and manages local tools and usage.")
         Component(anthropicProvider, "AnthropicProvider", "Java component", "Calls the Anthropic Messages API and manages local tool-use execution.")
-        Component(codeMieProvider, "CodeMieProvider", "Java component", "Obtains an OIDC token and delegates compatible models through the provider adapter.")
+        Component(codeMieProvider, "CodeMieProvider", "Java adapter / embedding provider", "Obtains an OIDC token, configures the CodeMie gateway, and delegates compatible models through provider extensions.")
         Component(toolsProvider, "ToolsProvider", "Java component", "Executes a registered local tool from a YAML tool-call description.")
         Component(noneProvider, "NoneProvider", "Java component", "No-op provider for disabled processing and tests.")
     }
@@ -82,7 +82,8 @@ Rel(noneProvider, processProvider, "Implements")
 Rel(baseProvider, configuration, "Reads provider, limits, web-search, and MCP settings")
 Rel(toolsLoader, functionTools, "Discovers implementations", "ServiceLoader")
 Rel(toolsLoader, processProvider, "Registers tools, prompts, and resources")
-Rel(functionTools, capabilityAnnotations, "Uses")
+Rel(baseProvider, functionTools, "Inspects implementations")
+Rel(functionTools, capabilityAnnotations, "Declares capabilities with")
 Rel(baseProvider, capabilityAnnotations, "Discovers annotated tools, prompts, and resources")
 Rel(baseProvider, typeConverter, "Builds schemas and converts arguments")
 Rel(baseProvider, toolLogger, "Logs callback activity")

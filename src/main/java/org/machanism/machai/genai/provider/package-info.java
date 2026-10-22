@@ -1,72 +1,60 @@
 /* @guidance: >>> ${guidances}/package-info-javadoc.md */
 
 /**
- * Concrete generative-AI provider implementations and supporting utilities used
- * by Machai.
+ * Provider integrations that connect Machai conversations to generative-AI
+ * model services.
  *
- * <p>
- * The classes in this package form the integration layer between Machai's
- * provider contracts and remote model APIs. A provider accepts prompts,
- * translates Machai configuration and tool definitions into SDK-specific
- * request objects, submits requests, resolves model-issued tool calls, records
- * usage, and returns the final result through the common
- * {@link org.machanism.machai.process.provider.ProcessProvider} contract.
- * Conversation input and provider-specific tool registrations are retained
- * until {@link org.machanism.machai.process.provider.ProcessProvider#clear()}
- * is called. Provider instances are therefore conversation-scoped and should
- * not be shared by concurrent conversations without external synchronization.
- * </p>
+ * <p>This package is the SDK-facing integration layer. Its providers translate
+ * Machai prompts, instructions, configuration, and reflected tool metadata into
+ * provider-specific requests; submit those requests; execute matching local
+ * tool functions when a model asks for them; append tool results to the
+ * conversation; and record reported token usage. The public provider contract
+ * is {@link org.machanism.machai.process.provider.ProcessProvider}; providers
+ * that generate vectors additionally implement
+ * {@link org.machanism.machai.process.provider.EmbeddingProvider}.</p>
  *
- * <h2>Implementations and relationships</h2>
+ * <h2>Provider implementations</h2>
  * <ul>
- * <li>{@link OpenAIProvider} adapts the OpenAI Java SDK Responses API. It
- * supports text prompts, function tools, OpenAI web search, MCP server tools,
- * response-usage accounting, and embeddings. Its client reads the API key and
- * optional compatible base URL from the configurator, applies the configured
- * timeout, output-token, and tool-call limits, and uses the configured model
- * when creating requests. A blank model is rejected after the client is
- * created, with the available model list included in the exception.</li>
- * <li>{@link AnthropicProvider} adapts the Anthropic Java SDK Beta Messages
- * API. It maintains user and assistant message history, executes registered
- * local tools, forwards MCP server definitions, supports the configured
- * Anthropic web-search tool versions, applies ephemeral cache control to the
- * final registered local tool, and records input and output usage. The API key,
- * optional base URL, and timeout are read from the configurator.</li>
- * <li>{@link CodeMieProvider} is a routing adapter around the OpenAI-compatible
- * and Anthropic-compatible implementations. It obtains an OAuth 2.0 access
- * token from EPAM CodeMie using a password grant for an e-mail username or
- * client credentials otherwise, then refreshes that token whenever the
- * delegated client is created. Blank, {@code gpt-*}, {@code gemini-*},
- * {@code text-embedding-*}, {@code codemie-text-embedding-*}, and
- * {@code amazon.titan-embed-text-*} model names select {@link OpenAIProvider};
- * {@code claude-*} names select {@link AnthropicProvider}; other prefixes are
- * rejected. The token endpoint can be overridden with {@code AUTH_URL}; the
- * downstream clients use the CodeMie API base URL and the retrieved token.</li>
+ * <li>{@link OpenAIProvider} uses the OpenAI Responses API. It supports text
+ * prompts, function tools, configured web search and MCP tools, follow-up
+ * requests for tool calls, usage accounting, and embeddings. Its client uses
+ * {@code OPENAI_API_KEY}, the optional {@code OPENAI_BASE_URL}, and the common
+ * timeout and output-limit settings described in its class documentation.</li>
+ * <li>{@link AnthropicProvider} uses the Anthropic Beta Messages API. It keeps
+ * user and assistant messages, forwards MCP definitions, supports the
+ * supported Anthropic web-search tool versions, invokes local tools, applies
+ * cache control to the final local tool, and records input and output usage.</li>
+ * <li>{@link CodeMieProvider} is a routing adapter. Model names with supported
+ * OpenAI-compatible prefixes, including blank model names and embedding
+ * prefixes, delegate to {@link OpenAIProvider}; {@code claude-*} names
+ * delegate to {@link AnthropicProvider}. It obtains an OAuth 2.0 token using a
+ * password grant for an e-mail username or client credentials otherwise, and
+ * supports an {@code AUTH_URL} token-endpoint override.</li>
  * </ul>
  *
- * <h2>Supporting utilities</h2>
+ * <h2>Shared infrastructure</h2>
  * <ul>
+ * <li>{@link AbstractAIProvider} supplies common configuration, model and
+ * request limits, project-directory context, reflective registration of
+ * annotated tools, prompts and resources, safe tool invocation, and MCP and
+ * web-search configuration hooks.</li>
  * <li>{@link TypeConverter} converts reflected tool arguments from strings or
- * JSON into Java values and maps Java classes to the simplified schema types
- * used by tool metadata.</li>
- * <li>{@link ToolLogger} is the package-local logging helper used for tool
- * inputs, results, and failures. Debug logging retains complete serialized
- * payloads, while info logging abbreviates them.</li>
- * <li>{@link AbstractAIProvider} supplies shared provider configuration,
- * conversation limits, project-directory handling, tool invocation, and common
- * web-search and MCP configuration hooks used by the concrete providers.</li>
+ * JSON into Java values and maps supported Java classes to schema type names.
+ * It handles scalar values, files, lists, maps, and Jackson JSON nodes.</li>
+ * <li>{@link ToolLogger} is the package-private execution logger. It emits
+ * complete serialized payloads at debug level and abbreviated payloads at info
+ * level, while recording tool failures with their project context.</li>
  * </ul>
  *
- * <h2>Common lifecycle</h2>
- * <p>
- * Create a provider, initialize it with a model and a configured
- * {@code Configurator}, add prompts through the provider API, optionally
- * register tools through the surrounding Machai provider or adapter API, and
- * call {@code perform()}. Concrete providers submit follow-up requests as
- * needed to resolve model-issued tool calls. Implementations that support
- * vector generation also implement
- * {@link org.machanism.machai.process.provider.EmbeddingProvider#embedding(String, long)}.
- * </p>
+ * <h2>Lifecycle and conversation scope</h2>
+ * <p>Initialize a provider with a model and a configured
+ * {@link org.machanism.macha.core.commons.configurator.Configurator}, add
+ * prompts and any annotated tool definitions, then call
+ * {@code perform()}. A provider may issue additional backend requests while it
+ * resolves model tool calls. Conversation inputs and registered provider state
+ * remain until {@link org.machanism.machai.process.provider.ProcessProvider#clear()}
+ * is called, so an instance represents one conversation and must not be shared
+ * concurrently without external synchronization.</p>
  *
  * <pre>
  * Configurator configurator = configuredCredentials();
@@ -77,18 +65,12 @@
  * provider.clear();
  * </pre>
  *
- * <h2>Configuration and boundaries</h2>
- * <p>
- * Credentials, endpoint selection, timeouts, web search, MCP servers, tool
- * execution, and output limits are backend-specific. The class-level
- * documentation of {@link OpenAIProvider}, {@link AnthropicProvider}, and
- * {@link CodeMieProvider} describes the supported configuration keys and
- * delegation behavior. These classes are service adapters, not a general-
- * purpose tool registry; host-side deterministic tool workflows should use the
- * separate tools-provider implementation. Providers should be initialized
- * before use and cleared before reuse so that prompts and tool results from a
- * previous conversation are not sent with the next request.
- * </p>
+ * <p>Credentials, endpoint selection, timeouts, search, MCP servers, tool
+ * execution, and output limits are backend-specific. Consult the class-level
+ * documentation of the concrete provider selected for the accepted keys and
+ * delegation behavior. Providers are service adapters rather than a general
+ * purpose tool registry; deterministic host-side workflows belong in the
+ * separate tools-provider implementation.</p>
  *
  * @author Viktor Tovstyi
  * @since 1.2.0

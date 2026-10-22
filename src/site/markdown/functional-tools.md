@@ -37,7 +37,7 @@ This separation improves maintainability and reuse. Tool logic stays in business
 
 ## Package: `org.machanism.machai.process.tools`
 
-The package `org.machanism.machai.process.tools` contains the host-side SPI, annotations, descriptors, and runtime contracts used to contribute functional tools. The requested `src/main/java/org/machanism/machai/ai/tools` directory is not present in this source tree; the functional-tools implementation is under `src/main/java/org/machanism/machai/process/tools`. The source inventory includes `ErrorResultException`, `FunctionTools`, `FunctionToolsLoader`, `Param`, `ParamDescriptor`, `Prompt`, `Resource`, `Role`, `SpecialException`, `SupportedFor`, `Tool`, `ToolExecutionException`, and `ToolFunction` (plus `package-info.java`).
+The package `org.machanism.machai.process.tools` contains the host-side SPI, annotations, descriptors, and runtime contracts used to contribute functional tools. The requested `src/main/java/org/machanism/machai/ai/tools` directory is not present in this source tree; the functional-tools implementation is under `src/main/java/org/machanism/machai/process/tools`. The source inventory includes `ErrorResultException`, `FunctionTools`, `FunctionToolsLoader`, `Param`, `ParamDescriptor`, `Prompt`, `Resource`, `Role`, `SpecialException`, `SupportedFor`, `Tool`, `ToolExecutionException`, and `ToolFunction` (plus `package-info.java`). The provider implementation that consumes these contracts is under `src/main/java/org/machanism/machai/genai/provider`; there is no `org.machanism.machai.ai.provider.impl` source path in this repository.
 
 ### `FunctionTools`
 
@@ -87,7 +87,7 @@ If a tool bundle class has `@SupportedFor`, the loader checks each declared clas
 
 #### Good use cases
 
-Use `FunctionToolsLoader` during provider initialization when all tool bundles available on the classpath should be activated automatically.
+Use `FunctionToolsLoader` after provider initialization when all tool bundles available on the classpath should be activated automatically. Provider initialization reads web-search and MCP configuration, while tool registration builds schemas using the provider's current project-directory context.
 
 ### `ToolFunction`
 

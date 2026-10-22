@@ -1,7 +1,9 @@
 package org.machanism.machai.provider.impl;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.File;
 
@@ -50,5 +52,18 @@ class NoneProviderTest {
             provider.setErrorHandling(false);
         });
         assertNull(provider.perform());
+    }
+
+    @Test
+    void exposesAnImmutableEmptyToolNameList() {
+        // Arrange
+        NoneProvider provider = new NoneProvider();
+
+        // Act
+        java.util.List<String> names = provider.getToolNames();
+
+        // Assert
+        assertEquals(java.util.Collections.emptyList(), names);
+        assertThrows(UnsupportedOperationException.class, () -> names.add("unexpected"));
     }
 }
