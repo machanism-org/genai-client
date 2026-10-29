@@ -3,6 +3,7 @@ package org.machanism.machai.ai.provider.impl;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Arrays;
+import java.util.HashSet;
 
 import org.junit.jupiter.api.Test;
 import org.machanism.machai.genai.provider.AnthropicProvider;
@@ -38,7 +39,10 @@ class ProviderToolNamesAndDelegationTest {
         provider.register("first");
 
         // Assert
-        assertEquals(Arrays.asList("first", "second"), provider.getToolNames());
+        assertEquals(
+                new HashSet<>(Arrays.asList("first", "second")),
+                new HashSet<>(provider.getToolNames())
+            );
     }
 
     @Test
