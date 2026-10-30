@@ -758,7 +758,10 @@ public abstract class AbstractAIProvider implements ProcessProvider {
 				if (valueStr instanceof String) {
 					value = TypeConverter.convertToType(param, (String) valueStr);
 				} else {
-					value = valueStr;
+					value = new ArrayList<Object>();
+					for (String item : (List<String>) valueStr) {
+						((List<Object>) value).add(item);
+					}
 				}
 
 				map.put(paramName, value);
