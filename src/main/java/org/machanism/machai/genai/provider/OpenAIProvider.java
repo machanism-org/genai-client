@@ -349,7 +349,7 @@ public class OpenAIProvider extends AbstractAIProvider implements EmbeddingProvi
 		if (value != null) {
 			inputs.add(ResponseInputItem.ofFunctionCallOutput(ResponseInputItem.FunctionCallOutput.builder()
 					.callId(functionCall.callId()).outputAsJson(value).build()));
-		}
+		} 
 	}
 
 	/**

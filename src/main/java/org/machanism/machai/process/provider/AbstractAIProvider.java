@@ -647,6 +647,11 @@ public abstract class AbstractAIProvider implements ProcessProvider {
 			try {
 				toolLogger.logInput(name, props, dir);
 				Object result = invoke(tools, method, props, paramsByType);
+
+				if (result == null) {
+					result = true;
+				}
+
 				toolLogger.logResult(name, dir, result);
 
 				return result;
@@ -863,7 +868,8 @@ public abstract class AbstractAIProvider implements ProcessProvider {
 	 * <p>
 	 * Use this setter to toggle between conversational error recovery and strict,
 	 * fail-fast exception repor\ting.
-	 * </p>\
+	 * </p>
+	 * \
 	 * <h4>Behavior Summary:</h4>
 	 * <ul>
 	 * <li>{@code setErrorHandling(true)} (Default): Captures all standard runtime
