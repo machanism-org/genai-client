@@ -753,9 +753,13 @@ public abstract class AbstractAIProvider implements ProcessProvider {
 				}
 
 				defaultValue = StringSubstitutor.replace(defaultValue, map);
-				String valueStr = getParamValue(props, paramName, defaultValue);
-
-				Object value = TypeConverter.convertToType(param, valueStr);
+				Object valueStr = getParamValue(props, paramName, defaultValue);
+				Object value;
+				if (valueStr instanceof String) {
+					value = TypeConverter.convertToType(param, (String) valueStr);
+				} else {
+					value = valueStr;
+				}
 
 				map.put(paramName, value);
 				args.add(value);
@@ -806,14 +810,20 @@ public abstract class AbstractAIProvider implements ProcessProvider {
 	 * @param defaultValue the default value to use if not present
 	 * @return the parameter value as a string
 	 */
-	protected String getParamValue(JsonNode props, String paramName, String defaultValue) {
-		String value;
-		if (props.has(paramName)) {
-			value = props.get(paramName).asText();
-		} else {
-			value = defaultValue;
+	protected Object getParamValue(JsonNode props, String paramName, String defaultValue) {
+		if (props == null || !props.has(paramName)) {
+			return defaultValue;
 		}
-		return value;
+
+		JsonNode jsonNode = props.get(paramName);
+		if (jsonNode.isArray()) {
+			List<String> data = new ArrayList<>();
+			for (JsonNode element : jsonNode) {
+				data.add(element.asText());
+			}
+			return data;
+		}
+		return jsonNode.asText();
 	}
 
 	/**

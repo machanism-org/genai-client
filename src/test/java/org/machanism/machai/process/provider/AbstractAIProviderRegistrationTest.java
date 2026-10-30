@@ -92,7 +92,7 @@ class AbstractAIProviderRegistrationTest {
         @Override protected void addResource(URI u, String d, String m, ToolFunction f, ParamDescriptor... p) { resources.add(new ResourceEntry(u, f)); }
         @Override public String perform() { return null; }
         @Override public List<String> getToolNames() { return new ArrayList<>(); }
-        String value(ObjectNode n, String key, String fallback) { return getParamValue(n, key, fallback); }
+        String value(ObjectNode n, String key, String fallback) { return (String)getParamValue(n, key, fallback); }
         Object safely(String name, ToolFunction function) { return safelyInvokeTool(name, function, new ObjectMapper().createObjectNode(), null); }
     }
     static final class Entry { final String name; final ToolFunction function; final ParamDescriptor[] params; Entry(String n, ToolFunction f, ParamDescriptor[] p) { name=n; function=f; params=p; } }
