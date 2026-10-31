@@ -755,13 +755,16 @@ public abstract class AbstractAIProvider implements ProcessProvider {
 
 				defaultValue = StringSubstitutor.replace(defaultValue, map);
 				Object valueStr = getParamValue(props, paramName, defaultValue);
-				Object value;
+				Object value = null;
 				if (valueStr instanceof String) {
 					value = TypeConverter.convertToType(param, (String) valueStr);
 				} else {
-					value = new ArrayList<Object>();
-					for (String item : (List<String>) valueStr) {
-						((List<Object>) value).add(item);
+					if (valueStr instanceof List) {
+						value = new ArrayList<Object>();
+						for (Object item : (List<String>) valueStr) {
+							item = TypeConverter.convertToType(param, (String) item);
+							((List<Object>) value).add(item);
+						}
 					}
 				}
 
