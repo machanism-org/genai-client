@@ -666,7 +666,12 @@ public abstract class AbstractAIProvider implements ProcessProvider {
 					if (targetException instanceof RuntimeException) {
 						throw (RuntimeException) targetException;
 					}
-					throw new IllegalArgumentException(targetException);
+
+					if (targetException instanceof RuntimeException) {
+						throw e;
+					} else {
+						throw new IllegalArgumentException(targetException);
+					}
 				}
 			}
 
