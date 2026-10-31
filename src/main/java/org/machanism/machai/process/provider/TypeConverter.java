@@ -85,7 +85,11 @@ public final class TypeConverter {
 	 * @throws IllegalArgumentException when JSON input cannot be converted
 	 */
 	public static Object convertToType(Parameter param, Object value) {
-		String valueStr = String.valueOf(value);
+		String valueStr = null;
+
+		if (value != null) {
+			valueStr = String.valueOf(value);
+		}
 
 		if (isUndefined(valueStr)) {
 			return null;
