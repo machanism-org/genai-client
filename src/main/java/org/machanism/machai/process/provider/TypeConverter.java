@@ -88,7 +88,15 @@ public final class TypeConverter {
 		String valueStr = null;
 
 		if (value != null) {
-			valueStr = String.valueOf(value);
+			if (value instanceof List || value instanceof Map) {
+				try {
+					valueStr = MAPPER.writeValueAsString(value);
+				} catch (JsonProcessingException e) {
+					throw new IllegalArgumentException("Unable to convert tool argument", e);
+				}
+			} else {
+				valueStr = String.valueOf(value);
+			}
 		}
 
 		if (isUndefined(valueStr)) {
