@@ -79,15 +79,19 @@ public final class TypeConverter {
 
 	/**
 	 * Converts an input value to the type declared by a reflected tool parameter.
+	 * 
+	 * @throws JsonProcessingException
 	 *
 	 * @throws IllegalArgumentException when JSON input cannot be converted
 	 */
-	public static Object convertToType(Parameter param, String input) {
-		if (isUndefined(input)) {
+	public static Object convertToType(Parameter param, Object value) {
+		String valueStr = String.valueOf(value);
+
+		if (isUndefined(valueStr)) {
 			return null;
 		}
 		try {
-			return convert(param, input);
+			return convert(param, valueStr);
 		} catch (JsonProcessingException e) {
 			throw new IllegalArgumentException("Unable to convert tool argument", e);
 		}
@@ -97,10 +101,11 @@ public final class TypeConverter {
 		return input == null || Strings.CS.equalsAny(input, Param.NULL, Param.NOT_DEFINED);
 	}
 
-	private static Object convert(Parameter param, String input) throws JsonProcessingException {
+	public static Object convert(Parameter param, String input) throws JsonProcessingException {
 		Class<?> type = param.getType();
 		if (List.class.isAssignableFrom(type)) {
-			return MAPPER.readValue(input, new TypeReference<List<String>>() { });
+			return MAPPER.readValue(input, new TypeReference<List<String>>() {
+			});
 		}
 		if (Map.class.isAssignableFrom(type)) {
 			return convertMap(param, input);
@@ -117,12 +122,15 @@ public final class TypeConverter {
 		}
 		String valueType = getMapValueType(param);
 		if (Integer.class.getName().equals(valueType)) {
-			return MAPPER.readValue(input, new TypeReference<Map<String, Integer>>() { });
+			return MAPPER.readValue(input, new TypeReference<Map<String, Integer>>() {
+			});
 		}
 		if (Double.class.getName().equals(valueType)) {
-			return MAPPER.readValue(input, new TypeReference<Map<String, Double>>() { });
+			return MAPPER.readValue(input, new TypeReference<Map<String, Double>>() {
+			});
 		}
-		return MAPPER.readValue(input, new TypeReference<Map<String, String>>() { });
+		return MAPPER.readValue(input, new TypeReference<Map<String, String>>() {
+		});
 	}
 
 	private static String getMapValueType(Parameter param) {
@@ -145,14 +153,22 @@ public final class TypeConverter {
 	}
 
 	private static Class<?> primitiveTypeMapping(Class<?> type) {
-		if (type == boolean.class) return Boolean.class;
-		if (type == byte.class) return Byte.class;
-		if (type == char.class) return Character.class;
-		if (type == double.class) return Double.class;
-		if (type == float.class) return Float.class;
-		if (type == int.class) return Integer.class;
-		if (type == long.class) return Long.class;
-		if (type == short.class) return Short.class;
+		if (type == boolean.class)
+			return Boolean.class;
+		if (type == byte.class)
+			return Byte.class;
+		if (type == char.class)
+			return Character.class;
+		if (type == double.class)
+			return Double.class;
+		if (type == float.class)
+			return Float.class;
+		if (type == int.class)
+			return Integer.class;
+		if (type == long.class)
+			return Long.class;
+		if (type == short.class)
+			return Short.class;
 		return type;
 	}
 }

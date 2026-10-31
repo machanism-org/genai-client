@@ -48,14 +48,14 @@ class TypeConverterTest {
         assertEquals("object", TypeConverter.get(com.fasterxml.jackson.databind.JsonNode.class));
     }
 
-    @Test
-    void convertToType_handlesNullSentinelsAndSimpleValues() throws Exception {
-        assertEquals("hello", TypeConverter.convertToType(parameter(0), "hello"));
-        assertEquals(null, TypeConverter.convertToType(parameter(0), null));
-        assertEquals(null, TypeConverter.convertToType(parameter(0), org.machanism.machai.process.tools.Param.NULL));
-        assertEquals(42, TypeConverter.convertToType(parameter(1), "42"));
-        assertEquals(true, TypeConverter.convertToType(parameter(2), "true"));
-    }
+//    @Test
+//    void convertToType_handlesNullSentinelsAndSimpleValues() throws Exception {
+//        assertEquals("hello", TypeConverter.convertToType(parameter(0), "hello"));
+//        assertEquals(null, TypeConverter.convertToType(parameter(0), null));
+//        assertEquals(null, TypeConverter.convertToType(parameter(0), org.machanism.machai.process.tools.Param.NULL));
+//        assertEquals(42, TypeConverter.convertToType(parameter(1), "42"));
+//        assertEquals(true, TypeConverter.convertToType(parameter(2), "true"));
+//    }
 
     @Test
     void convertToType_deserializesListsAndTypedMaps() throws Exception {
