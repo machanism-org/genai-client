@@ -721,6 +721,7 @@ public abstract class AbstractAIProvider implements ProcessProvider {
 	 * @throws ReflectiveOperationException if the invoked target throws an
 	 *                                      exception
 	 */
+	@SuppressWarnings("unchecked")
 	private Object invoke(FunctionTools tools, Method method, JsonNode props, Object... paramsByType)
 			throws ReflectiveOperationException {
 		// FunctionTools implementations are often package-private test/application
