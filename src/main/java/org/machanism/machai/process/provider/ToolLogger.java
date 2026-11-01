@@ -18,7 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * level, complete serialized payloads and failure stack traces are included.
  * </p>
  */
-class ToolLogger {
+public class ToolLogger {
 
 	/** Logger used to write tool execution messages. */
 	static Logger logger = LoggerFactory.getLogger(ToolLogger.class);
@@ -26,7 +26,7 @@ class ToolLogger {
 	/**
 	 * Defines the types of operations whose activity can be logged.
 	 */
-	enum Type {
+	public enum Type {
 		/**
 		 * Indicates the logged operation involves accessing or processing an external
 		 * resource.
@@ -74,7 +74,7 @@ class ToolLogger {
 	 * @param dir             the active project directory context
 	 * @param targetException the exception thrown by the target tool
 	 */
-	void logError(String name, File dir, Throwable targetException) {
+	public void logError(String name, File dir, Throwable targetException) {
 		if (logger.isDebugEnabled()) {
 			logger.error(ERROR_MSG, type, name,  "failed: " + targetException.getMessage(), dir, targetException);
 		} else {
@@ -89,7 +89,7 @@ class ToolLogger {
 	 * @param props JSON node representing tool properties
 	 * @param dir   the active project directory context
 	 */
-	void logInput(String name, JsonNode props, File dir) {
+	public void logInput(String name, JsonNode props, File dir) {
 		if (logger.isDebugEnabled()) {
 			String valueOf = writeValueAsString(props);
 			logger.debug(CALL_MSG, type, name, valueOf, dir);
@@ -118,7 +118,7 @@ class ToolLogger {
 	 * @param dir    the active project directory context
 	 * @param result the resulting object returned by the tool function
 	 */
-	void logResult(String name, File dir, Object result) {
+	public void logResult(String name, File dir, Object result) {
 		if (logger.isDebugEnabled()) {
 			String valueOf = writeValueAsString(result);
 			logger.debug(RETURNS_MSG, type, name, valueOf.length(), valueOf, dir);

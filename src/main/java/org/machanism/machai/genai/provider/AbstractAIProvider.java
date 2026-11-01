@@ -21,8 +21,9 @@ import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.text.StringSubstitutor;
 import org.machanism.macha.core.commons.configurator.Configurator;
-import org.machanism.machai.genai.provider.ToolLogger.Type;
 import org.machanism.machai.process.provider.ProcessProvider;
+import org.machanism.machai.process.provider.ToolLogger;
+import org.machanism.machai.process.provider.ToolLogger.Type;
 import org.machanism.machai.process.tools.FunctionTools;
 import org.machanism.machai.process.tools.Param;
 import org.machanism.machai.process.tools.ParamDescriptor;
@@ -664,6 +665,12 @@ public abstract class AbstractAIProvider implements ProcessProvider {
 					}
 					throw new IllegalArgumentException(targetException);
 				}
+			} catch (Exception e) {
+				toolLogger.logError(name, dir, e);
+				if (e instanceof RuntimeException) {
+					throw (RuntimeException) e;
+				}
+				throw new IllegalArgumentException(e);
 			}
 
 		}, paramsDesc);
