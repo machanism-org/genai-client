@@ -27,11 +27,13 @@ GenAI Client is a Java library designed for integrating Machai applications with
 
 The library is organized around the common `ProcessProvider` lifecycle contract and shared provider infrastructure. Applications can resolve a configured provider from identifiers such as `OpenAI:gpt-4o-mini`, attach prompts, system instructions, tools, resources, web-search support, or MCP servers, and execute requests without depending directly on vendor-specific SDK details. Token usage is captured in immutable usage records and can be aggregated per model for reporting and diagnostics.
 
-`ProcessProviderManager` resolves `Provider:Model` identifiers by reflection, initializes public no-argument provider implementations with a `Configurator`, and separately resolves embedding providers. `Usage` records input, cached-input, and output token counts, while `UsageStatistics` keeps in-memory records keyed by the exact model identifier and exposes model-specific or aggregate reporting. Provider instances retain their conversation and registration state until `clear()` is called and should not be shared concurrently without external synchronization.
+`ProcessProviderManager` resolves `Provider:Model` identifiers by reflection, initializes public no-argument provider implementations with a `Configurator`, and separately resolves embedding providers. `Usage` records input, cached-input, and output token counts, while `UsageStatistics` keeps in-memory records keyed by the exact model identifier and exposes model-specific or aggregate reporting. Provider instances should not be shared concurrently without external synchronization. For OpenAI and Anthropic, `clear()` removes accumulated conversation inputs but preserves registered tools, search and MCP settings, and system instructions; lifecycle semantics differ for local providers.
 
 GenAI Client also includes a lightweight tool metadata layer. Java methods annotated as tools, prompts, or resources can be discovered through `ServiceLoader`, described with parameter metadata, filtered for supported application classes, and registered with providers as AI-callable functions or resource callbacks. This enables advanced use cases such as semantic search, automated content generation, intelligent project assembly, structured tool execution, local tool orchestration, and provider-independent prompt workflows.
 
-The `org.machanism.machai.process.tools` package also provides provider-neutral callback and failure contracts. `ToolFunction` supports programmatic JSON-based invocation, `ParamDescriptor` represents programmatic parameter metadata, and `ErrorResultException`, `ToolExecutionException`, and `SpecialException` distinguish structured results, checked tool failures, and intentional task completion. Service descriptors are loaded in discovery order; `SupportedFor` can restrict a capability bundle to application classes and its exclusions can veto an otherwise compatible match.
+The `org.machanism.machai.process.tools` package also provides provider-neutral callback and failure contracts. `ToolFunction` supports programmatic JSON-based invocation, `ParamDescriptor` represents programmatic parameter metadata, and `ErrorResultException`, `ToolExecutionException`, and `SpecialException` distinguish structured results, checked tool failures, and intentional task completion. Publish capability bundles in `META-INF/services/org.machanism.machai.process.tools.FunctionTools`; the loader also accepts the legacy descriptor. Implementations are registered in discovery order without deduplication; `SupportedFor` can restrict a capability bundle to application classes and its exclusions can veto an otherwise compatible match.
+
+`AbstractAIProvider` supplies shared configuration, project-directory context, reflective capability registration, argument conversion, and tool-error handling. `ProcessProviderAdapter` decorates an initialized delegate for application-level concerns such as logging or metrics; it does not implement retries itself. `TypeConverter` maps Java parameter types to schema names and converts string or JSON arguments, while `ToolLogger` logs tool, prompt, and resource callbacks with abbreviated INFO payloads and complete DEBUG payloads. Prompt and resource registration are extension hooks, so their availability depends on the concrete provider rather than being guaranteed by the common contract.
 
 ![GenAI Client structure](./images/c4-diagram.png)
 
@@ -52,7 +54,7 @@ Typical configuration includes an OpenAI API key, a chat or embedding model name
 
 Configure it with an identifier such as `OpenAI:gpt-4o-mini` or `OpenAI:text-embedding-3-small`, `OPENAI_API_KEY`, and, for a compatible gateway, `OPENAI_BASE_URL`. `GENAI_TIMEOUT`, `MAX_OUTPUT_TOKENS`, `MAX_TOOL_CALLS`, `WebSearchTool.*`, and `MCP*` settings are optional.
 
-`WebSearchTool.type` is provider-specific: OpenAI uses its supported search tool type, while Anthropic accepts `default`, `20260209`, or `20250305`. MCP groups are read as `MCP.*`, then sequentially as `MCP_1.*`, `MCP_2.*`, and so on; a group is registered when its name is present.
+`WebSearchTool.type` is provider-specific: OpenAI passes the configured type to its SDK, mapping `default` to `web-search-preview`; Anthropic maps `default` to `20260209` and also accepts `20250305`. Endpoint and model support must match the selected tool type. MCP groups are read as `MCP.*`, then `MCP_1.*` (always checked), then sequential numbered groups while the preceding numbered group's URL is present. Avoid gaps in numbered groups. A group is registered when its name is present, and a valid URL is needed by the backend.
 
 ### Anthropic
 
@@ -99,7 +101,7 @@ Configure it with `None:log` for INFO-level lifecycle diagnostics, or with anoth
 | `ANTHROPIC_BASE_URL` | Optional base URL override for Anthropic-compatible APIs. | Anthropic SDK default |
 | `GENAI_TIMEOUT` | Request timeout in seconds. A value of `0` or an absent value leaves SDK defaults in effect. | `0` |
 | `MAX_OUTPUT_TOKENS` | Maximum number of tokens the model may generate. | `18000` |
-| `MAX_TOOL_CALLS` | Maximum number of tool calls the OpenAI Responses API may issue in a response loop. A value of `0` leaves the limit unset. | `0` |
+| `MAX_TOOL_CALLS` | OpenAI Responses API tool-call limit sent with each request when positive; not a host-side limit on follow-up iterations or Anthropic tool-use loops. A value of `0` leaves the limit unset. | `0` |
 | `WebSearchTool.type` | Enables provider-specific web search when present. The value `default` maps to the provider default web-search tool type where supported. | Not set |
 | `WebSearchTool.city` | Optional city hint for web-search user location. | Not set |
 | `WebSearchTool.country` | Optional country hint for web-search user location. | Not set |
@@ -107,16 +109,16 @@ Configure it with `None:log` for INFO-level lifecycle diagnostics, or with anoth
 | `MCP.url` | URL for the first MCP server tool. Additional servers can be configured with numbered groups such as `MCP_1.url`, `MCP_2.url`, and so on. | Not set |
 | `MCP.name` | Provider-visible MCP server name (passed to OpenAI as its server label). Additional servers can use `MCP_1.name`, `MCP_2.name`, and so on. A name is required for a configured group to be registered. | Not set |
 | `MCP.authorization` | Optional authorization value for the MCP server. Additional servers can use numbered variants. | Not set |
-| `MCP.description` | Optional MCP server description. Additional servers can use numbered variants. | Not set |
-| `GENAI_USERNAME` | Generic username used by provider authentication flows. CodeMie can use it for password-grant authentication. | Provider-specific |
-| `GENAI_PASSWORD` | Generic password or secret used by provider authentication flows. CodeMie can use it as a password or client secret. | Provider-specific |
-| `AUTH_URL` | Optional CodeMie OpenID Connect token endpoint override. | CodeMie default endpoint |
+| `MCP.description` | Optional MCP server description sent by OpenAI; Anthropic currently ignores it. Additional servers can use numbered variants. | Not set |
+| `GENAI_USERNAME` | CodeMie user e-mail for password-grant authentication, or client ID for client-credentials authentication. | Not set; required for CodeMie |
+| `GENAI_PASSWORD` | CodeMie password or client secret for the selected authentication flow. | Not set; required for CodeMie |
+| `AUTH_URL` | Optional CodeMie OpenID Connect token endpoint override. | `https://auth.codemie.lab.epam.com/realms/codemie-prod/protocol/openid-connect/token` |
 
 ## Resources
 
 - [Machai GenAI Client site](https://machai.machanism.org/genai-client/index.html)
 - [Machanism platform](https://machanism.org/)
 - [Machai project documentation](https://machai.machanism.org/)
-- [GitHub repository](https://github.com/machanism-org/machai.git)
+- [GitHub repository](https://github.com/machanism-org/genai-client)
 - [Maven Central artifact](https://central.sonatype.com/artifact/org.machanism.machai/genai-client)
 - [API documentation](https://machai.machanism.org/genai-client/apidocs/)

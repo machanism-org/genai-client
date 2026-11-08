@@ -120,7 +120,7 @@ Object apply(JsonNode params, Object... paramsByType) throws Exception
 
 #### Attributes
 
-- `name`: tool name visible to the provider and model. If omitted, the method name is used. Internally, the sentinel constant `Tool.NOT_DEFINED` is used to detect an unspecified value.
+- `name`: tool name visible to the provider and model. If omitted, the shared provider converts the Java method name to snake_case (for example, `readFile` becomes `read_file`). Internally, the sentinel constant `Tool.NOT_DEFINED` is used to detect an unspecified value.
 - `description`: human-readable explanation of what the tool does.
 
 #### Example
@@ -132,7 +132,7 @@ public String readFile(@Param(name = "path", description = "File path to read") 
 }
 ```
 
-If `name` is omitted, the Java method name becomes the tool name.
+If `name` is omitted, the snake_case form of the Java method name becomes the tool name. Explicit names are used unchanged; choose unique names across bundles because the OpenAI invocation lookup uses the function name, not the implementation class.
 
 ### `@Param`
 
@@ -162,7 +162,7 @@ At invocation time, the provider:
 - treats `Param.NULL` and `Param.NOT_DEFINED` as no effective default value,
 - and converts the resulting string into the Java parameter type.
 
-The special parameter name `project-dir` is reserved by the provider. When a parameter uses that name and a working directory is configured, the provider injects the current project directory path automatically. That parameter is excluded from the published schema only when a project directory is configured, so the model does not need to supply it in that case.
+The special parameter name `project-dir` is reserved by the provider. When a parameter uses that name and a working directory is configured, the shared registration code omits it from the parameter descriptors and uses the directory path as its invocation default. An explicitly supplied JSON argument still takes precedence over that default, so this is not a security boundary. OpenAI also excludes this name from its published schema when no directory is configured. Prefer an unannotated `File` context parameter and validate paths inside the tool when the operation must stay within the project directory.
 
 #### Type mapping
 
@@ -171,9 +171,11 @@ Java parameter types are mapped to JSON schema types through the provider type c
 - `String` and `File` to `string`,
 - `int` and `Integer` to `integer`,
 - `double` and `Double` to `number`,
-- `boolean` and `Boolean` to `boolean`.
+- `boolean` and `Boolean` to `boolean`,
 - `JsonNode` and `Map` to `object`,
 - `List` to `array`.
+
+These are schema mappings, not a guarantee of arbitrary nested JSON support. The shared invocation code converts JSON arrays to lists of text values and other nodes through `asText()`. In particular, native JSON object arguments do not reach `Map` or `JsonNode` parameters intact. For complex inputs, use a documented JSON-encoded string or a programmatic `ToolFunction` that reads the original `JsonNode`. Test actual invocation as well as schema generation.
 
 #### Additional injections
 
@@ -321,11 +323,11 @@ The shared provider logic in `AbstractAIProvider` performs most of the annotatio
 
 ### Tool registration flow
 
-When `provider.addTools(functionTools)` is called:
+When `provider.addTools(functionTools, null)` is called:
 
 - the provider scans public methods of the implementation class,
 - it selects methods annotated with `@Tool`,
-- it resolves the exposed tool name from `@Tool.name` or falls back to the Java method name,
+- it resolves the exposed tool name from `@Tool.name` or falls back to the snake_case form of the Java method name,
 - it collects `@Param` metadata from method parameters,
 - it converts parameter Java types through the internal type converter,
 - it marks parameters as required when `defaultValue` is not declared,
@@ -351,7 +353,7 @@ At invocation time, the provider:
 - supports placeholder substitution between earlier resolved argument values and later default values,
 - injects `Configurator` for unannotated parameters of that type,
 - injects `File` for unannotated file-context parameters,
-- auto-fills the reserved `project-dir` parameter from the configured provider project directory,
+- uses the configured project directory as the default for the reserved `project-dir` parameter (an explicit JSON value takes precedence),
 - and applies placeholder substitution to string return values before returning them.
 
 This means a custom tool method can combine model-supplied arguments with application runtime context without manual parsing boilerplate.
@@ -542,7 +544,7 @@ The generated parameter schema includes:
 - a top-level `type` value of `object`,
 - and a `required` array for parameters whose `isRequired()` returns `true`.
 
-For annotation-based registration, a parameter named `project-dir` is excluded from the schema when a project directory has been configured and is injected by the provider at runtime instead. The OpenAI programmatic `addTool(...)` implementation excludes a descriptor with that name unconditionally, so do not list it as a model-supplied parameter.
+For annotation-based registration, the shared provider omits a parameter named `project-dir` from descriptors when a project directory has been configured and supplies that path as its invocation default. The OpenAI `addTool(...)` implementation excludes a descriptor with that name unconditionally, so it is never published as a model-supplied parameter by OpenAI, even without a configured directory. Explicit JSON arguments can still override the default; enforce working-directory restrictions in your tool implementation.
 
 The tool is created with `strict(false)` and stored together with its `ToolFunction` callback.
 
@@ -558,6 +560,8 @@ When the model calls a host-managed function tool in `OpenAIProvider`:
 6. The provider sends a follow-up request so the model can continue using the tool result.
 
 If JSON argument parsing fails, the provider logs the parsing failure and returns the exception text as the function output, allowing the model conversation to continue.
+
+For annotation-based tools, a `null` return value (including a `void` method result) becomes `true`. A programmatic callback returning `null` does not produce a function-output item in this implementation; return an explicit result instead.
 
 ## How to create a custom functional tool
 
@@ -599,19 +603,26 @@ com.example.tools.ExampleFunctionTools
 
 If the file contains multiple class names, all of them can be discovered and applied.
 
+For standard classpath `ServiceLoader` discovery, each implementation must be a public concrete class with a public no-argument constructor. Publish it in only one service descriptor: the loader accepts both current and legacy descriptor names but does not deduplicate implementations.
+
 ### Step 3: Apply tools during provider setup
 
 ```java
 ProcessProvider provider = ...;
 Class<?> appClass = MyProcessor.class;
 
+provider.init(model, config);
+provider.setProjectDir(projectDir);
+
 FunctionToolsLoader loader = new FunctionToolsLoader();
 loader.applyTools(provider, null, appClass);
 ```
 
+Here, `model` is the model identifier, `config` is your `Configurator`, and `projectDir` is the working-directory `File`. For `OpenAIProvider`, supply `OPENAI_API_KEY` through that configuration and choose a model/endpoint supporting the configured native tools. The web-search and MCP property examples above are entries in the same configuration passed to `init(...)`; they are not separate setup calls.
+
 ### Step 4: Optionally add prompts
 
-If your bundle should contribute reusable prompts, add public methods annotated with `@Prompt`.
+If your bundle should contribute reusable prompts, add public methods annotated with `@Prompt` and import `Prompt` and `Role` from `org.machanism.machai.process.tools`. This requires a provider that implements prompt registration; OpenAI does not currently expose these annotated prompts.
 
 ```java
 @Prompt(name = "example-prompt", description = "Reusable helper prompt", role = Role.ASSISTANT)
@@ -637,7 +648,7 @@ When creating a custom tool, follow these recommendations:
 
 ### Step 6: Handle failures intentionally
 
-Throw an exception when the requested operation cannot be completed. With the default provider error handling enabled, ordinary failures are converted into a model-visible error result, allowing the model to adjust its next call. Use `ToolExecutionException` to make an expected execution failure explicit, or `ErrorResultException` when the error details should be returned as a structured JSON message. Reserve `SpecialException` for a deliberate control-flow condition that must bypass normal conversational error handling.
+Throw an exception when the requested operation cannot be completed. With the default provider error handling enabled, ordinary failures are converted into a model-visible error result, allowing the model to adjust its next call. Use `ToolExecutionException` to make an expected execution failure explicit, or `ErrorResultException` to include serialized JSON details in the exception message. The shared safety wrapper prefixes that message with error text, so the overall function output is not a standalone JSON error object. Return a structured object normally if consumers need directly parseable error data. Reserve `SpecialException` for a deliberate control-flow condition that must bypass normal conversational error handling.
 
 ### Step 7: Restrict the tool when necessary
 
@@ -657,7 +668,7 @@ If `@SupportedFor` is omitted, the tool bundle is treated as globally compatible
 Use this quick guide:
 
 - Choose `FunctionTools` + `@Tool` when you want local Java methods exposed as provider tools.
-- Choose `@Prompt` when you want reusable prompt fragments registered beside tools.
+- Choose `@Prompt` when you want reusable prompt fragments registered beside tools and your provider implements the prompt-registration hook.
 - Choose OpenAI web search when the model needs current public web information.
 - Choose MCP servers when the capabilities already exist in an external MCP-compatible service.
 - Choose programmatic `addTool(...)` when tool registration metadata is easier to build in code than through annotations.
