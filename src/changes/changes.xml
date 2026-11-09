@@ -3,6 +3,14 @@
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:schemaLocation="http://maven.apache.org/changes/2.0.0 https://maven.apache.org/xsd/changes-2.0.0.xsd">
   <body>
+    <release version="1.4.3" date="2026-11-09" description="Improves AI provider error handling and reliability when processing tool parameters and results.">
+      <action dev="dev" type="fix">AI Providers: Improved exception handling and error reporting during tool execution.</action>
+      <action dev="dev" type="fix">Parameter Processing: Preserved structured provider parameters and improved conversion of array, collection, and typed values.</action>
+      <action dev="dev" type="fix">Function Tools: Corrected tool invocation handling for null results and provider tool calls.</action>
+    </release>
+      <release version="1.4.2" date="2026-10-23" description="Relocates the abstract AI provider into the GenAI provider package.">
+      <action dev="dev" type="refactor">Provider Organization: Relocated the abstract AI provider into the GenAI provider package.</action>
+    </release>
     <release version="1.4" date="2026-09-01" description="Adds configurable error handling and enabled-tool filtering while improving Act inheritance, tool registration, and diagnostic logging.">
       <!-- Features -->
       <action dev="dev" type="add">Error Handling: Added configurable error handling for AI file processing and tool execution.</action>
@@ -37,9 +45,6 @@
       <action dev="dev" type="fix">Parameter Processing: Fixed file argument processing, prompt default values, non-parameterized Map parameters, generic Map conversion, object property type processing, input parameter application, and ordering of tool parameters.</action>
       <action dev="dev" type="add">Prompt Support: Added prompt publishing support with prompt bundles, prompt registration, and role metadata.</action>
       <action dev="dev" type="add">Prompt Support: Improved prompt template parameter default value processing and prompt registration behavior.</action>
-    </release>
-    <release version="1.4.2" date="2026-10-23" description="Relocates the abstract AI provider into the GenAI provider package.">
-      <action dev="dev" type="refactor">Provider Organization: Relocated the abstract AI provider into the GenAI provider package.</action>
     </release>
   </body>
 </document>
