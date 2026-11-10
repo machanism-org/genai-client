@@ -27,7 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * 
  * @since 1.3.0
  */
-public class ErrorResultException extends RuntimeException {
+public class ErrorResultException extends ToolException {
 
 	/**
 	 * Serialization version for compatibility with previously serialized exception
