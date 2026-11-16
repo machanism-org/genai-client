@@ -22,6 +22,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.text.StringSubstitutor;
 import org.machanism.macha.core.commons.configurator.Configurator;
 import org.machanism.machai.process.provider.ToolLogger.Type;
+import org.machanism.machai.process.tools.EndTaskException;
 import org.machanism.machai.process.tools.FunctionTools;
 import org.machanism.machai.process.tools.Param;
 import org.machanism.machai.process.tools.ParamDescriptor;
@@ -660,6 +661,9 @@ public abstract class AbstractAIProvider implements ProcessProvider {
 				Throwable targetException = e.getTargetException();
 				if (targetException instanceof SpecialException) {
 					throw (SpecialException) targetException;
+
+				} else if (targetException instanceof EndTaskException) {
+					throw (EndTaskException) targetException;
 
 				} else {
 					toolLogger.logError(name, dir, targetException);
