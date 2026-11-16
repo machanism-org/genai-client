@@ -22,7 +22,9 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.text.StringSubstitutor;
 import org.machanism.macha.core.commons.configurator.Configurator;
 import org.machanism.machai.process.provider.ToolLogger.Type;
+import org.machanism.machai.process.tools.CommandResult;
 import org.machanism.machai.process.tools.EndTaskException;
+import org.machanism.machai.process.tools.ErrorResultException;
 import org.machanism.machai.process.tools.FunctionTools;
 import org.machanism.machai.process.tools.Param;
 import org.machanism.machai.process.tools.ParamDescriptor;
@@ -253,7 +255,12 @@ public abstract class AbstractAIProvider implements ProcessProvider {
 	 */
 	protected Object safelyInvokeTool(String name, ToolFunction tool, JsonNode params, File projectDir) {
 		try {
-			return tool.apply(params, projectDir, getConfigurator());
+			Object result = tool.apply(params, projectDir, getConfigurator());
+
+			if (!isErrorHandling() && result instanceof CommandResult && ((CommandResult) result).getExitCode() != 0) {
+				throw new ErrorResultException(result);
+			}
+			return result;
 
 		} catch (Exception e) {
 			if (e instanceof SpecialException) {
