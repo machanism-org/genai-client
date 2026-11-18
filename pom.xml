@@ -35,7 +35,7 @@
 		<dependency>
 			<groupId>com.openai</groupId>
 			<artifactId>openai-java</artifactId>
-			<version>4.90.0</version>
+			<version>4.105.0</version>
 			<exclusions>
 				<exclusion>
 					<groupId>com.github.victools</groupId>
