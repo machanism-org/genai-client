@@ -37,7 +37,7 @@ This separation improves maintainability and reuse. Tool logic stays in business
 
 ## Package: `org.machanism.machai.process.tools`
 
-The package `org.machanism.machai.process.tools` contains the host-side SPI, annotations, descriptors, and runtime contracts used to contribute functional tools. The requested `src/main/java/org/machanism/machai/ai/tools` directory is not present in this source tree; the functional-tools implementation is under `src/main/java/org/machanism/machai/process/tools`. The source inventory includes `ErrorResultException`, `FunctionTools`, `FunctionToolsLoader`, `Param`, `ParamDescriptor`, `Prompt`, `Resource`, `Role`, `SpecialException`, `SupportedFor`, `Tool`, `ToolExecutionException`, and `ToolFunction` (plus `package-info.java`). The provider implementation that consumes these contracts is under `src/main/java/org/machanism/machai/genai/provider`; there is no `org.machanism.machai.ai.provider.impl` source path in this repository.
+The package `org.machanism.machai.process.tools` contains the host-side SPI, annotations, descriptors, and runtime contracts used to contribute functional tools. The requested `src/main/java/org/machanism/machai/ai/tools` directory is not present in this source tree; the functional-tools implementation is under `src/main/java/org/machanism/machai/process/tools`. The source inventory includes `CommandResult`, `EndTaskException`, `ErrorResultException`, `FunctionTools`, `FunctionToolsLoader`, `Param`, `ParamDescriptor`, `Prompt`, `Resource`, `Role`, `SpecialException`, `SupportedFor`, `Tool`, `ToolException`, `ToolExecutionException`, and `ToolFunction` (plus `package-info.java`). The provider implementation that consumes these contracts is under `src/main/java/org/machanism/machai/genai/provider`; there is no `org.machanism.machai.ai.provider.impl` source path in this repository.
 
 ### `FunctionTools`
 
@@ -232,17 +232,29 @@ public String projectSchema() {
 
 When `FunctionToolsLoader.applyTools(...)` finds a compatible bundle, it passes resources to the provider in addition to tools and prompts. The shared provider code parses each URI and creates a callback; the concrete provider must implement the resource-registration hook for that callback to be exposed. `OpenAIProvider` currently does not override that hook.
 
+### `ToolException`
+
+`ToolException` is the common unchecked exception base for tool-related exceptions in this package. It adds no special provider behavior by itself: the normal tool safety wrapper treats it like another runtime failure unless it is a `SpecialException`.
+
 ### `ErrorResultException`
 
-`ErrorResultException` is a runtime exception for returning structured tool errors. An object passed to its constructor is serialized as JSON; a string is used as-is. The overload accepting an `Exception` includes both the underlying error and serialized details, making it suitable when the model needs machine-readable failure information.
+`ErrorResultException` extends `ToolException` and carries error details in its exception message. An object passed to its constructor is serialized as JSON; a string is used as-is. The overload accepting an `Exception` includes both the underlying error and serialized details. The normal safety wrapper adds its own error prefix, so this exception does not yield a standalone JSON error payload; return a structured value normally when the caller must parse structured output.
 
 ### `ToolExecutionException`
 
-`ToolExecutionException` is a checked exception for a tool callback that cannot complete its requested operation. Create it with a descriptive message or the underlying cause. Because `ToolFunction.apply(...)` can throw `Exception`, a programmatic `ToolFunction` can use this type to make an expected execution failure explicit; the provider's normal safety handling then returns the failure to the model when conversational error handling is enabled.
+`ToolExecutionException` is a checked exception for a tool callback that cannot complete its requested operation. Create it with a descriptive message or the underlying cause. A programmatic `ToolFunction` can throw it directly because `ToolFunction.apply(...)` declares `throws Exception`; an annotated Java method can also declare it, though reflective invocation wraps checked target failures before the provider's normal safety handling returns the failure to the model when conversational error handling is enabled.
 
 ### `SpecialException`
 
-`SpecialException` signals a deliberate, non-recoverable tool condition, such as ending the current task. Provider safety handling rethrows it instead of converting it into the normal conversational error text, so use it only when ordinary tool failure recovery should be bypassed.
+`SpecialException` signals a deliberate, non-recoverable tool condition. Provider safety handling rethrows it instead of converting it into normal conversational error text, so use it only when ordinary tool failure recovery should be bypassed. This is specifically recognized by the provider wrapper; other unchecked exceptions (including `ToolException`) are handled as ordinary failures.
+
+### `EndTaskException`
+
+`EndTaskException` extends `ToolException` and represents a request to finish a user-driven task without terminating the application. It is not a subclass of `SpecialException`, and the provider's functional-tool safety wrapper does not give it special control-flow treatment. Use `SpecialException` when a tool must bypass ordinary conversational error handling, or ensure the application layer explicitly handles `EndTaskException`.
+
+### `CommandResult`
+
+`CommandResult` is a simple result bean with a message, process exit code, and a log-report map. It does not execute commands or register a tool; use it as a return-value data carrier when a tool reports command execution details.
 
 ### `Role`
 
@@ -561,7 +573,7 @@ When the model calls a host-managed function tool in `OpenAIProvider`:
 
 If JSON argument parsing fails, the provider logs the parsing failure and returns the exception text as the function output, allowing the model conversation to continue.
 
-For annotation-based tools, a `null` return value (including a `void` method result) becomes `true`. A programmatic callback returning `null` does not produce a function-output item in this implementation; return an explicit result instead.
+For annotation-based tools, a `null` return value (including a `void` method result) does not produce a function-output item in this implementation. The same is true for a programmatic callback returning `null`; return an explicit result instead.
 
 ## How to create a custom functional tool
 
@@ -603,7 +615,7 @@ com.example.tools.ExampleFunctionTools
 
 If the file contains multiple class names, all of them can be discovered and applied.
 
-For standard classpath `ServiceLoader` discovery, each implementation must be a public concrete class with a public no-argument constructor. Publish it in only one service descriptor: the loader accepts both current and legacy descriptor names but does not deduplicate implementations.
+For standard classpath `ServiceLoader` discovery, each implementation must be a public concrete class with a public no-argument constructor. The legacy descriptor loader uses reflection and can instantiate a non-public no-argument constructor. Publish an implementation in only one service descriptor: the loader accepts both current and legacy descriptor names but does not deduplicate implementations.
 
 ### Step 3: Apply tools during provider setup
 
@@ -639,7 +651,7 @@ When creating a custom tool, follow these recommendations:
 - write a description that clearly explains the tool purpose,
 - annotate every model-supplied parameter with an explicit name and accurate description,
 - use `defaultValue` on `@Param` for optional parameters,
-- use the reserved `project-dir` parameter name when the tool needs the provider working directory path,
+- use an unannotated `File` context parameter when a tool needs the provider working directory; on OpenAI, avoid exposing a model-supplied `project-dir` argument because the provider omits it from the published schema,
 - use an unannotated `Configurator` parameter when the tool needs runtime configuration,
 - use an unannotated `File` parameter when the tool needs direct access to the current project directory object,
 - return simple structured output when possible,
