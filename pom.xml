@@ -5,19 +5,20 @@
 	<parent>
 		<groupId>org.machanism.machai</groupId>
 		<artifactId>machai</artifactId>
-		<version>1.4.3</version>
+		<version>1.4.4-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>genai-client</artifactId>
 	<name>GenAI Client</name>
+	
+	<!-- @guidance: Summarize the `src/site/markdown/index.md` introduction
+	section and put this conten to the `description` tag.  -->
 	<description>
-		GenAI Client is a Java library designed for seamless integration with
-		Generative AI providers. It offers foundational prompt management and
-		embedding capabilities, enabling AI-powered features across Machai
-		modules. The library simplifies interactions with AI services,
-		supporting advanced use cases such as semantic search, automated content
-		generation, and intelligent project assembly within the Machanism
-		ecosystem.
+		GenAI Client is a Java library for integrating Machai applications with
+		generative AI providers through a consistent provider abstraction. It
+		supports provider resolution, prompt and instruction handling, runtime
+		configuration, embedding generation, usage tracking, and registering
+		Java functions, prompts, and resources for AI-powered workflows.
 	</description>
 
 	<properties>
