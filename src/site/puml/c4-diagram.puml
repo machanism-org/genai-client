@@ -16,9 +16,8 @@ LAYOUT_TOP_DOWN()
 title Machai GenAI Client - C4 Component Diagram
 
 System_Ext(hostApplication, "Host Application", "Configures the library, selects a provider, submits prompts, and supplies local capabilities.")
-
 System_Ext(configuration, "Application Configuration", "Provider credentials, model limits, web search, MCP, and tool settings.")
-System_Ext(openaiApi, "OpenAI-compatible API", "Responses, embeddings, web search, and MCP endpoints.")
+System_Ext(openaiApi, "OpenAI-compatible API", "Responses and embeddings endpoints; compatible gateways may also provide web search and MCP.")
 System_Ext(anthropicApi, "Anthropic API", "Messages API with tool use, web search, and MCP support.")
 System_Ext(codeMieAuth, "CodeMie OIDC Token Endpoint", "Issues OAuth 2.0 access tokens.")
 System_Ext(codeMieApi, "CodeMie Code Assistant API", "OpenAI- and Anthropic-compatible GenAI gateway.")
@@ -28,22 +27,22 @@ Container_Boundary(genaiClient, "Machai GenAI Client Library (embedded in the ho
     Boundary(publicApi, "Provider API") {
         Component(processProvider, "ProcessProvider", "Java interface", "Provider lifecycle, instructions, prompts, execution, tools, resources, project context, and error handling.")
         Component(embeddingProvider, "EmbeddingProvider", "Java interface", "Contract for generating embedding vectors.")
-        Component(adapter, "ProcessProviderAdapter", "Java adapter", "Delegates the ProcessProvider API to a configured provider instance.")
+        Component(adapter, "ProcessProviderAdapter", "Java adapter", "Forwards the ProcessProvider contract to a configured delegate.")
     }
 
     Boundary(providerImplementations, "Provider Implementations") {
-        Component(baseProvider, "AbstractAIProvider", "Java abstract class (process.provider)", "Shared provider lifecycle, configuration, web-search and MCP bootstrap, reflective capability registration, argument conversion, callbacks, and error handling.")
-        Component(openaiProvider, "OpenAIProvider", "Java component", "Calls the OpenAI-compatible Responses and Embeddings APIs; supports local tools, web search, MCP, and token-usage tracking.")
-        Component(anthropicProvider, "AnthropicProvider", "Java component", "Calls the Anthropic Messages API; supports local tool-use execution, web search, MCP, and token-usage tracking.")
-        Component(codeMieProvider, "CodeMieProvider", "Java adapter / embedding provider", "Obtains an OIDC token, configures the CodeMie gateway, and delegates compatible models through provider extensions.")
+        Component(baseProvider, "AbstractAIProvider", "Java abstract class (process.provider)", "Shared provider configuration and lifecycle, web-search and MCP bootstrap, reflective capability registration, argument conversion, callback handling, and tool-error handling.")
+        Component(openaiProvider, "OpenAIProvider", "Java component", "Uses the OpenAI-compatible Responses and Embeddings APIs; supports local tools, web search, MCP, and token-usage tracking.")
+        Component(anthropicProvider, "AnthropicProvider", "Java component", "Uses the Anthropic Messages API; supports local tool execution, web search, MCP, and token-usage tracking.")
+        Component(codeMieProvider, "CodeMieProvider", "Java adapter and EmbeddingProvider", "Obtains OIDC access tokens, configures the CodeMie gateway, and delegates chat or embedding requests through compatible provider extensions.")
         Component(toolsProvider, "ToolsProvider", "Java component", "Executes a registered local tool from a YAML tool-call description.")
         Component(noneProvider, "NoneProvider", "Java component", "No-op provider for disabled processing and tests.")
     }
 
     Boundary(capabilityRegistration, "Capability Registration") {
         Component(toolsLoader, "FunctionToolsLoader", "Java component", "Discovers FunctionTools implementations with ServiceLoader, filters supported applications, and registers tools, prompts, and resources.")
-        Component(functionTools, "FunctionTools", "Java SPI", "Host extension point for local capabilities.")
-        Component(capabilityAnnotations, "Tool / Prompt / Resource annotations", "Java annotations", "Declares callable names, descriptions, parameters, roles, resources, and application support.")
+        Component(functionTools, "FunctionTools", "Java SPI", "Host extension point for local capability implementations.")
+        Component(capabilityAnnotations, "Tool / Prompt / Resource annotations", "Java annotations", "Declares callable names, descriptions, parameters, roles, resource URIs, and application support.")
         Component(typeConverter, "TypeConverter", "Java utility (process.provider)", "Maps Java types to provider schemas and converts JSON or YAML arguments.")
         Component(toolLogger, "ToolLogger", "Java utility", "Logs local tool, prompt, and resource callback activity.")
     }
@@ -98,8 +97,8 @@ Rel(openaiProvider, usage, "Records token usage")
 Rel(anthropicProvider, usage, "Records token usage")
 
 Rel(codeMieProvider, codeMieAuth, "Obtains OAuth 2.0 token", "HTTPS")
-Rel(openaiProvider, codeMieApi, "Calls configured gateway for CodeMie delegation", "OpenAI SDK / HTTPS")
-Rel(anthropicProvider, codeMieApi, "Calls configured gateway for CodeMie delegation", "Anthropic SDK / HTTPS")
+Rel(openaiProvider, codeMieApi, "Calls gateway when configured for CodeMie delegation", "OpenAI SDK / HTTPS")
+Rel(anthropicProvider, codeMieApi, "Calls gateway when configured for CodeMie delegation", "Anthropic SDK / HTTPS")
 Rel(codeMieProvider, openaiProvider, "Delegates compatible models")
 Rel(codeMieProvider, anthropicProvider, "Delegates compatible models")
 
